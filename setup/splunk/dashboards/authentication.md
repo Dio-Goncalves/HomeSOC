@@ -5,7 +5,9 @@ This dashboard is made of three different tabs:
   - The "windows" tab which will focus on the windows machines;
   - The "linux" tab which will focus on the linux machines.
 
-Observation: The time filter for this dashboard is set to match the attack ran on the Simulation 1 page.
+Observations: 
+ - The time filter for this dashboard is set to match the attack ran on the Simulation 1 page;
+ - Also, due to the limited available time, the usernames present in the screenshots are not redacted. I'm aware that its a bad practice but considering that the lab is not longer live, its rather irrelevant. It's perfectly fine for demonstration purposes.
 
 ## General tab
 ### Overview
@@ -31,7 +33,7 @@ index=* ((EventCode=4625 OR (source="/var/log/auth.log" "authentication failure"
 **Query Analysis:**  
  - Analyzing the query, its obvious that the first line references what was previously mentioned regarding the Windows Event ID and Linux auth.log file. It's filtering for logs related to the Event ID 4625 or logs related to authentication failures on the auth.log file. Also, it's worth mentioning that since we are doing a cross-platform search, we couldn't narrow down on the `index` search, so we had to use the wildcard * to search across all indexes; 
  - The second line of the query filters out logs that have a null user field on the logs and also, it does something else that we will get into on later charts. To do this the [eval](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/eval) command was used. This is a very capable command that has the ability to transform data and create new fields using existing ones;  
- - The third and fourth line of the query are mere exception rules created to filter out unwanted noise. When the query was being created, I was getting some unwanted noise from poorly parsed logs and these lines are here merely to make sure that the noise stays out. These lines are entirely situational. For this we used the [where](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/where) command which works as a boolean search filter and also the [search](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/search) command to filter out unwanted content from our starting search;  
+ - The third and fourth line of the query are mere exception rules created to filter out unwanted noise. When the query was being created, I was getting some unwanted noise from poorly parsed logs and these lines are here merely to make sure that the noise stays out. These lines are entirely situational. For this we used the [where](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/where) command which works as a boolean search filter and also the [search](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/search) command to filter out unwanted content from our starting search. In this specific case, I wanted to filter out logs that were related to a "win11-client" user which, considering that I don't have any user named like that and also that this is a hostname, it was safe to assure that it was a poorly parsed log. Then, in some instances I was getting duplicate logs from usernames with the format "domain/username" and thats where the `where` command came in to filter this unnecessary noise out;  
  - Finally, [timechart](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/timechart) command is here merely to format our data into our timechart.
 
 #### Total Failed Login Attemps Count
@@ -51,4 +53,22 @@ index=* (EventCode=4625 OR (source="/var/log/auth.log" "authentication failure")
  - The only line that differs from the last query is the last line. Here the [stats](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/stats) command was used, together with the argument `count` to simply count the number of events that match our search query, resulting on the number obtained. The `stats` command is a very powerful statistics command that can be used in many different ways.
 
 #### Failed Login attempts by User and Host
+The purpose of this chart is to present the failed login attempts in an organized manner, sorting by User, Host and Failed Login count. Its goal is to help visualize which hosts and users were more affected and have a higher probability of being subjects of something like a brute-force attack.
 
+<img width="738" height="172" alt="Pasted image 20260707112440" src="https://github.com/user-attachments/assets/074fed6e-d706-47a2-b89a-47ad132ecde3" />
+
+According to the table above, it's possible to see that all the failed login attempts happened on linux-based hosts, with 2 users having 8 failed login attempts each, each on its own host. There was also a failed login attempt for the root user, on the debian machine.  
+```
+index=* (EventCode=4625 OR (source="/var/log/auth.log" "authentication failure"))
+| eval User=case(isnotnull(Account_Name), lower(mvindex(Account_Name,-1)), isnotnull(user), lower(user)
+| search User!="win11-client"
+| where NOT like(User,"domain/%")
+| stats count as "Failed Logons" values(host) as Hosts by User
+| table User Hosts "Failed Logons"
+| sort - Failed Logons"
+```
+**Query Analysis:**
+ - The first four lines are the same as our previous queries, but this time around, it's important to explain the full function of the second line of our query. Besides using the `eval` command with the `isnotnull` argument to filter out logs with null User field (`Account_Name` for Windows logs and `user` for Linux logs), it also uses the `lower` argument to format all the usernames into lowercase. Something that was happening specifically on the Windows logs was that the `Account_Name` field was being populated twice, first by the domain name and then with the username. To correct this, the `mvindex` argument was used with the parameter `Account_Name,-1` to only parse last field present in `Account_Name` (username) and ignore the first field (domain name);
+ - Once again we make use of the `stats count` command, not only to label our count as "Failed Logons", but also to transform the data. Here we are essentially grouping the data by User, listing all unique hosts where those failures occured and counting said failures. Simply put, counting the failed attempts and labeling them as "Failed Logons" (`stats count as "Failed Logons"`), correlating with "host" value, labeled as "Hosts" (`values(host) as Hosts`), sorted by User (`by User`);
+ - Next we use the [table](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/table) command to build the table. This is a very simple, yet effective and poweful command to use. It consists on the command `table`, followed by the columns we wish to have. According to our query, we know we have the "User" field, that we obtain from the `eval` command, and then the "Hosts" and "Failed Logons" fields, that we obtain from the `stats` command. Considering this, we can simply use the `table` command, followed by these fields to make a table using these fields as columns;
+ - Lastly, the `sort` command is used with the `-` argument to sort the "Failed Logons" column in descending order. Showing in the first line the User and Host with the biggest amount of failed login attempts, to quickly detect any possible problems.
