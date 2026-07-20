@@ -91,3 +91,26 @@ index=* source="/var/log/auth.log" "Failed Password"
  - On the next line we make use of the [rex](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/rex) command. This is utilized to extract fields making use of regular expressions. The `field=_raw` argument, tells splunk to search the entire text in the log. Then we start with the parsing, knowing that the log can either be "Failed password for username" or "Failed password for invalid user username" we have to create an expression capable of parsing out the username out of both of these expressions. We start by matching the word "for" on the expression and then add `(invalid user)?`, here the `()?` mean that this part of the sentence is entirely optional, but it's important to let Splunk know that it can be there. Then, the important part, we capture our username with `(?<User>\S+)` and store it in a variable named "User". The `\S+` is added to make Splunk read characters until it reaches a whitespace, thats when the username ends;
  - The next lines of the query follow the exact same logic of the previous one.
 
+#### User Creation
+The following table is meant to monitor user creation. This is a popular method of obtaining persistence by attackers and usually only possible to do by using privileged users. Maintaining an eye on this, can help detect signs of persistence and also privileged account compromise.
+
+<img width="737" height="335" alt="Pasted image 20260707112909" src="https://github.com/user-attachments/assets/e1b29657-d1e4-449e-b9dd-58a967935b45" />
+
+```
+index=* (Eventcode=4720 OR (source="/var/log/auth.log" "new user:"))
+| rex field=_raw "name=(?<LinuxUser>[^,]+)"
+| eval WindowsUser=if(EventCode=4720,mvindex(Account_Name,-1),null())
+| eval CreatedUser=coalesce(WindowsUser, LinuxUser)
+| eval Platform=if(EventCode=4720,"Windows","Linux")
+| where isnotnull(CreatedUser)
+| table _time Platform host CreatedUser
+| sort -_time
+```
+**Query Analysis:**
+ - To monitor for user creation, we have to either take a look at [Windows Event ID 4720](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4720) logs or, for linux, the `auth.log` file, in the logs containing "new user:". This is what the first line of the query filters for;
+ - Once, again we use the `rex` command to parse the raw log. Here, we tell Splunk to parse the username after "new user:" and store inside the "LinuxUser" variable. With `[^,]+` we tell it to keep reading characters on the raw text until it reaches a comma, that's when we know the username ends;
+ - Then, making use of `eval`, we parse the new windows user and store it inside the "WindowsUser" variable. To do this we use an `if` statement, by filtering on the 4720 ID logs, for the second value stored on the `Account_Name` variable. We filter for the second value because we were facing the same problem as before, where the first value was not the username but the domain name;
+ - Next, we create a new variable, "CreatedUser", and make use of `coalesce` to join the previously created variables "WindowsUser" and "LinuxUser", under this new variable;
+ - Then, using `eval` once again, we create a new field, "Platform", and use an `if` statement to give it a value. If we are dealign with an `EventCode=4720`, that means its a Windows Event ID 4720 log, meaning we are dealing with a Windows machine. If not, we are dealing with a Linux;
+ - Like in previous queries, we make use of the `where` command, together with "isnotnull" expression, to filter out null values, this time on the "CreatedUser" field;
+ - Finally, for the last 2 query lines we make use of the `table` command to create a table with the created variables, together with "time" and "host". In the last line we use the command `sort` to show the most recent events first.
