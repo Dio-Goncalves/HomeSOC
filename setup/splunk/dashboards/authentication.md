@@ -5,9 +5,11 @@ This dashboard is made of three different tabs:
   - The "windows" tab which will focus on the windows machines;
   - The "linux" tab which will focus on the linux machines.
 
-Observations: 
+**Observations:** 
  - The time filter for this dashboard is set to match the attack ran on the Simulation 1 page;
- - Also, due to the limited available time, the usernames present in the screenshots are not redacted. I'm aware that its a bad practice but considering that the lab is not longer live, its rather irrelevant. It's perfectly fine for demonstration purposes.
+ - Also, due to the limited available time, the usernames present in the screenshots are not redacted. I'm aware that its a bad practice but considering that the lab is not longer live, its rather irrelevant. It's perfectly fine for demonstration purposes;
+ - I'll only explain something in detail the first time I mention it. A lot of commands will be repeated for different queries, so it doesn't make sense to waste time writing the same thing all the time. If you still have any doubts after reading my explanations, make sure to `ctrl + F` for the command you are looking for or simply make use of the documentation I mention below;
+ - Make sure to use the following documentation for reference: [Windows Security Log Events](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/). [Splunk search commands](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/abstract).
 
 ## General tab
 ### Overview
