@@ -1,7 +1,7 @@
 # Authentication Dashboard
 
 This dashboard is made of three different tabs: 
-  - The "general" tab which will give an overview over the environment;
+  - The [General tab](#General-tab) which will give an overview over the environment;
   - The "windows" tab which will focus on the windows machines;
   - The "linux" tab which will focus on the linux machines.
 
@@ -114,3 +114,32 @@ index=* (Eventcode=4720 OR (source="/var/log/auth.log" "new user:"))
  - Then, using `eval` once again, we create a new field, "Platform", and use an `if` statement to give it a value. If we are dealign with an `EventCode=4720`, that means its a Windows Event ID 4720 log, meaning we are dealing with a Windows machine. If not, we are dealing with a Linux;
  - Like in previous queries, we make use of the `where` command, together with "isnotnull" expression, to filter out null values, this time on the "CreatedUser" field;
  - Finally, for the last 2 query lines we make use of the `table` command to create a table with the created variables, together with "time" and "host". In the last line we use the command `sort` to show the most recent events first.
+
+#### Deleted Users
+The following table will monitor for deleted users across all the machines. This is very important to monitor with user tampering and avoid any data loss or control over the machines.
+
+<img width="734" height="312" alt="Pasted image 20260707113145" src="https://github.com/user-attachments/assets/81cb2a93-2752-4039-a70d-72dbf7707ec4" />
+
+```
+index=* EventCode=4726
+| eval Platform="Windows"
+| eval DeletedUser=mvindex(Account_Name,-1)
+| table _time Platform host DeletedUser
+| append [
+search index=* source="/var/log/auth.log" ("userdel" OR "deluser")
+| rex field=_raw "delete user '(?<DeletedUser>[^']+)'"
+| eval Platform="Linux"
+| where isnotnull(DeletedUser)
+| table _time Platform host DeletedUser
+]
+| sort -_time
+```
+**Query Analysis:**
+ - The approach is similar to the previous query but here we will make use of the [append](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/append) command to have a more organized query. As the name suggests, this allows us to append one search to another, allowing us to effectively stack two searches on top of each other, while querying for them in a more organized way;
+ - Starting with the first search, we search for the [Windows Event ID 4726](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4726) logs, related to deleting user accounts;
+ - The logic on the following lines of the query is very similar to the one previously seen, we'll tell Splunk to create a "Platform" variable and store the "Windows" value inside it every time it sees the `EventCode=4726` value. Then parse out the second value stored inside `Account_Name` field, to obtain our username, store it inside the "DeletedUser" variable and create a table with the created variables, together with "time" and "host" variables;
+ - Then, we make use of the `append` command to essentially attach a similar search to the one we just did, but for Linux machines. We search the `auth.log` file for "userdel" or "deluser", as this can differ between linux and debian machines;
+ - Then use the `rex` command to parse out the username from the raw log file, utilizing similar logic as before and storing the value in the "DeletedUser" variable;
+ - Once again, using the `eval` command, we tell Splunk to store the "Linux" value inside the "Platform" variable;
+ - We filter out null values with the `where` command and then proceed to create a table similar to the one in the first part of the search with the same columns. It's important to have matching columns to have a consistent table;
+ - Using the `sort` command, we sort the events to show the most recent ones first.
