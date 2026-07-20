@@ -72,3 +72,22 @@ index=* (EventCode=4625 OR (source="/var/log/auth.log" "authentication failure")
  - Once again we make use of the `stats count` command, not only to label our count as "Failed Logons", but also to transform the data. Here we are essentially grouping the data by User, listing all unique hosts where those failures occured and counting said failures. Simply put, counting the failed attempts and labeling them as "Failed Logons" (`stats count as "Failed Logons"`), correlating with "host" value, labeled as "Hosts" (`values(host) as Hosts`), sorted by User (`by User`);
  - Next we use the [table](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/table) command to build the table. This is a very simple, yet effective and poweful command to use. It consists on the command `table`, followed by the columns we wish to have. According to our query, we know we have the "User" field, that we obtain from the `eval` command, and then the "Hosts" and "Failed Logons" fields, that we obtain from the `stats` command. Considering this, we can simply use the `table` command, followed by these fields to make a table using these fields as columns;
  - Lastly, the `sort` command is used with the `-` argument to sort the "Failed Logons" column in descending order. Showing in the first line the User and Host with the biggest amount of failed login attempts, to quickly detect any possible problems.
+
+#### Failed SSH Authentication
+The following table, is pretty much equal to the previous one, but dedicated to SSH authentication. Since this protocol is very frequently used, both for legitimate and ilegitimate purposes, it makes all the sense in the world to give it some attention.
+
+<img width="739" height="176" alt="Pasted image 20260707112648" src="https://github.com/user-attachments/assets/53d248b7-5e0f-4108-a221-b1fa91ba3db0" />
+
+The photo above shows us the same information as the one from the previous table. It makes complete sense, since on the attack simulation, there were only failed authentication attempts via SSH on the linux environments.
+```
+index=* source="/var/log/auth.log" "Failed Password"
+| rex field=_raw "for (invalid user)?(?<User>\S+)"
+| stats count as Attempts values(host) as Host by User
+| table User Host Attempts
+| sort -Attempts
+```
+**Query Analysis:**
+ - Previously, while studying the different types of logs, I realized that the pertinent logs for this were the logs in the `auth.log` file that had the expression "Failed Password", hence why the initial filter on the first line of the query;
+ - On the next line we make use of the [rex](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/rex) command. This is utilized to extract fields making use of regular expressions. The `field=_raw` argument, tells splunk to search the entire text in the log. Then we start with the parsing, knowing that the log can either be "Failed password for username" or "Failed password for invalid user username" we have to create an expression capable of parsing out the username out of both of these expressions. We start by matching the word "for" on the expression and then add `(invalid user)?`, here the `()?` mean that this part of the sentence is entirely optional, but it's important to let Splunk know that it can be there. Then, the important part, we capture our username with `(?<User>\S+)` and store it in a variable named "User". The `\S+` is added to make Splunk read characters until it reaches a whitespace, thats when the username ends;
+ - The next lines of the query follow the exact same logic of the previous one.
+
