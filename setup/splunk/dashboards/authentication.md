@@ -145,3 +145,35 @@ search index=* source="/var/log/auth.log" ("userdel" OR "deluser")
  - Once again, using the `eval` command, we tell Splunk to store the "Linux" value inside the "Platform" variable;
  - We filter out null values with the `where` command and then proceed to create a table similar to the one in the first part of the search with the same columns. It's important to have matching columns to have a consistent table;
  - Using the `sort` command, we sort the events to show the most recent ones first.
+
+#### Password Changes
+The last table on this tab will monitor password changes and password resets. This is another popular method for attackers lock the victims out of their own machines.
+
+<img width="1490" height="246" alt="Pasted image 20260707113540" src="https://github.com/user-attachments/assets/6bb97740-8885-4dd7-bbcb-ba23f535950a" />
+
+```
+index=* (EventCode=4723 OR EventCode=4724)
+| eval Platform="Windows"
+| eval User=mvindex(Account_Name,-1)
+| eval Action=case(EventCode=4723,"Password Changed", EventCode=4724,"Password Reset")
+| where isnotnull(User)
+| table _time Platform host User Action
+| append [
+search index=* source="/var/log/auth.log" "password changed for"
+| rex field=_raw "password changed for (?<User>\S+)"
+| eval Platform="Linux"
+| eval Action="Password Changed"
+| table _time Platform host User Action
+]
+| sort -_time
+```
+**Query Analysis:**
+ - This query makes use of logic similar to what was used so far, using functions like `eval` to create new variables from existing data, `rex` to parse raw logs and `append` to split the search;
+ - Starting with the first part of the search, related to Windows, we start by searching for events with [Windows Event ID 4723](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4723), related to password changes, and [Windows Event ID 4724](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4724), related to password resets;
+ - Then, using the command `eval`, we tell Splunk that if it finds these events, to create a variable named "Platform" and store the value "Windows" in it. Once again, also using `eval`, we will create a variable named "User" and store there the last value from the "Account_Name" field on the logs (remember from previous queries that this is because I had 2 values stored on this field, the first value was the domain name and the second value was the username);
+ - Also using the `eval` command, we create an "Action" variable and by using the `case` command, we'll tell Splunk to store different values in it, depending on the type of Windows Event ID we find on our log. This will serve as a column on the table we'll build for a nice quick visual reference to understand which action was performed on the target account;
+ - Then, using the `where` function we filter the null values for the "User" variable and finally, using the `table` command, we create a table with the variables we just created using `eval`, together with the existing "time" and "host" fields;
+ - Then, using the `append` command, we'll attach to our query the second part of it, related to Linux. We start by searching for the `auth.log` file and the expression "password changed for" to filter for the right logs;
+ - Like in previous queries, we make use of the `rex` command to parse the raw logs and store the username on the "User" variable";
+ - Equal to the first part of the search, we use the `eval` command to create the "Platform" variable, assigning it the value of "Linux" and the "Action" variable, with the "Password Changed" value. This means that if we are dealing with Linux logs, these variables will take these values automatically;
+ - Finally, using the `table` command, we create a table with the same columns as the one we created on the Windows search and sort the events to show the newest ones first, by using the command `sort`.
