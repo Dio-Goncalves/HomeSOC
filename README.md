@@ -23,5 +23,5 @@ This was a big learning process, not only in technical terms and learning the to
  - Automation of Threat Intelligence through STIX/TAXII with a local LLM for automatic report generation;
  - Implement some sort of ticketing platform to simulate a more realistic workflow (such as JIRA).
 
-⚠️⚠️ DISCLAIMER ⚠️⚠️
+## ⚠️⚠️DISCLAIMER⚠️⚠️  
 This is a live repository, even though the lab is fully built, the repository is still far from being finished.
