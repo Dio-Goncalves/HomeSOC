@@ -5,6 +5,25 @@ This is my first ever project of this kind and also first ever GitHub repository
 
 ## Repository Structure
 You can find below the structure of this repository with direct links for each part
+1. architecture
+   - Lab Diagram
+   - Network Topology
+2. attacks & detection
+   - Simulation 1
+3. setup
+   - pfSense
+     - Suricata
+   - Linux Server
+     - Splunk
+   - Windows Server
+   - Windows User
+   - Debian Endpoint
+   - Attacker Machine (Kali VM)
+4. splunk
+   - dashboards
+     - authentication
+     - endpoint activity
+     - IDS
 
 ## Lessons Learned
 **Documentation is key**. It was something I had very clear and that paid a lot of attention to. But on a project this big, there were times that due to time constraints from the trial software (mostly Splunk with its 2 month free trial) and also due to the fact that I have a job and have a life outside of this, I didn't document as well as I should. There were times that, while I was assembling the lab and running trials, I didn't document every step in order to avoid repeating myself or documenting unnecessary stuff in case what I was doing didn't work. Later, this proved to be a big mistake and made me lose even more time when building this repository and referencing to some of the things I did previously.  
