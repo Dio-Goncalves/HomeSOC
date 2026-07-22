@@ -5,12 +5,12 @@ This is my first ever project of this kind and also first ever GitHub repository
 
 ## Repository Structure
 You can find below the structure of this repository with direct links for each part
-1. architecture
-   - [Lab Diagram](architecture/Lab Diagram.png)
-   - Network Topology
+1. [architecture](architecture)
+   - [Lab Diagram](<architecture/Lab Diagram.png>)
+   - [Network Topology](<architecture/Network Topology.png>)
 2. attacks & detection
    - Simulation 1
-3. setup
+3. [setup](setup)
    - pfSense
      - Suricata
    - Linux Server
@@ -19,9 +19,9 @@ You can find below the structure of this repository with direct links for each p
    - Windows User
    - Debian Endpoint
    - Attacker Machine (Kali VM)
-4. splunk
-   - dashboards
-     - authentication
+4. [splunk](splunk)
+   - [dashboards](splunk/dashboards)
+     - [authentication](splunk/dashboards/authentication.md)
      - endpoint activity
      - IDS
 
