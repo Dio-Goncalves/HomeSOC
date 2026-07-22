@@ -6,7 +6,7 @@ This is my first ever project of this kind and also first ever GitHub repository
 ## Repository Structure
 You can find below the structure of this repository with direct links for each part
 1. architecture
-   - [Lab Diagram](architecture/'Lab Diagram.png')
+   - [Lab Diagram](architecture/'Lab Diagram'.png)
    - Network Topology
 2. attacks & detection
    - Simulation 1
