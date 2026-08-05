@@ -2,7 +2,7 @@
 
 This dashboard is made of three different tabs: 
   - The [General tab](#General-tab) which will give an overview over the environment;
-  - The "windows" tab which will focus on the windows machines;
+  - The [Windows tab](#Windows-tab) which will focus on the windows machines;
   - The "linux" tab which will focus on the linux machines.
 
 **Observations:** 
@@ -177,3 +177,59 @@ search index=* source="/var/log/auth.log" "password changed for"
  - Like in previous queries, we make use of the `rex` command to parse the raw logs and store the username on the "User" variable";
  - Equal to the first part of the search, we use the `eval` command to create the "Platform" variable, assigning it the value of "Linux" and the "Action" variable, with the "Password Changed" value. This means that if we are dealing with Linux logs, these variables will take these values automatically;
  - Finally, using the `table` command, we create a table with the same columns as the one we created on the Windows search and sort the events to show the newest ones first, by using the command `sort`.
+
+
+## Windows tab  
+### Overview
+<img width="1885" height="597" alt="Pasted image 20260707111135" src="https://github.com/user-attachments/assets/9fe421cc-dcd2-4172-9023-21177efdb5bb" />
+<img width="1867" height="537" alt="Pasted image 20260707111148" src="https://github.com/user-attachments/assets/734543d7-c0e4-4006-b47c-7ccaa48537e2" />
+<img width="1863" height="427" alt="Pasted image 20260707111205" src="https://github.com/user-attachments/assets/50d832dc-ef31-4135-a061-3d01b5d08712" />
+<img width="1860" height="388" alt="Pasted image 20260707111218" src="https://github.com/user-attachments/assets/523ed96a-d58a-469f-8824-8d1dcbccfbaa" />
+<img width="1861" height="388" alt="Pasted image 20260707111230" src="https://github.com/user-attachments/assets/e71640a7-e15f-4449-aa1c-b5a64e761504" />
+<img width="1856" height="381" alt="Pasted image 20260707111239" src="https://github.com/user-attachments/assets/11b17bb9-d40c-43fb-9509-265d4d105212" />
+
+### In-Depth Analysis
+#### Failed Logons Over Time Timechart
+Once again, the dashboard starts with a timechart of total failed login attempts. This time, its specific to Windows.  
+
+<img width="920" height="381" alt="Pasted image 20260708083529" src="https://github.com/user-attachments/assets/e272de01-be5a-4c3c-85ba-67319aa86080" />
+
+Similarly to the first query on the previous tab, here we once again made use of the [Windows Event ID 4625](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4625) (An account failed to log on). Since we are only dealing with Windows events, this time the SPL query will be even simpler:  
+```
+index=* EventCode=4625 Failure_Reason=*Unknown user name or bad password.*
+| timechart count
+```
+**Query Analysis:**
+ - Analyzing the query, besides the obvious `EventCode=4625` filter, we also filter for the expression `Failure_Reason=*Unknown user name or bad password.*` to specifically filter for bad credential events and filter out any additional noise that may come out;
+ - Once again we use the `timechart count` command to format the data into a timechart with the event count.
+
+#### Total Failed Logons Count
+Similarly to the previous tab of the dashboard, next in line is the total count of failed login attempts presented in the form of a radical, allowing us to have another perspective on the information.
+
+<img width="918" height="181" alt="Pasted image 20260708083541" src="https://github.com/user-attachments/assets/27681782-a4a3-4ce8-a255-adbf7bd17231" />
+
+The SPL query is very similar to the one that presents us the timechart, the only difference being in the piped command. For this query we'll make use of the `stats count` command to obtain a radical number with the total amount of events:
+```
+index=* EventCode=4625 Failure_Reason=*Unknown user name or bad password.*
+| stats count as "Total Failed Logons"
+```
+**Query Analysis:**
+ - As mentioned above, the only difference to the previous query is the piped command, where we pipe the `stats count as "Total Failed Logons"` command to obtain the total amount of events with the "Total Failed Logons" label.
+
+#### Failed Logons by User and Host
+The next table nicely displays the amount of failed login attempts, separating by user and host. This allows us to evaluate specifically which user and machine is more susceptible to being attacked.
+
+<img width="916" height="183" alt="Pasted image 20260708083553" src="https://github.com/user-attachments/assets/94414490-bdeb-40ec-8919-534b902de343" />
+
+Once again, we made use of the [Windows Event ID 4625](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4625) for the SPL query:
+```
+index=* EventCode=4625
+| eval User=lower(mvindex(Account_Name,-1))
+| search NOT User IN ("win11-client","domain/endpoint01")
+| stats count as "Failed Logons" values(host) as Host by User
+| table User Host "Failed Logons"
+| sort - "Failed Logons"
+```
+**Query Analysis:**
+ - Besides the usual first line, once again we make use of the `eval` command to create the variable "User". To get the values for this new variable, we'll use the `mvindex(Account_Name,-1)` command to filter for the last value on the `Account_Name` field, which is where the username resides. Using the `lower` command we format this value to lower case;
+ - This query follows exactly the same logic of the one found in [Failed Login attempts by User and Host](#Failed-Login-attempts-by-User-and-Host). In order to avoid repeating myself, please refer to this one.
