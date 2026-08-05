@@ -231,5 +231,8 @@ index=* EventCode=4625
 | sort - "Failed Logons"
 ```
 **Query Analysis:**
- - Besides the usual first line, once again we make use of the `eval` command to create the variable "User". To get the values for this new variable, we'll use the `mvindex(Account_Name,-1)` command to filter for the last value on the `Account_Name` field, which is where the username resides. Using the `lower` command we format this value to lower case;
  - This query follows exactly the same logic of the one found in [Failed Login attempts by User and Host](#Failed-Login-attempts-by-User-and-Host). In order to avoid repeating myself, please refer to this one.
+
+
+#### User Creation
+
