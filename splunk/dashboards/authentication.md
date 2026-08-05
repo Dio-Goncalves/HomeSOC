@@ -235,4 +235,82 @@ index=* EventCode=4625
 
 
 #### User Creation
+The next table displays the events regarding user creation by host and user, sorted by newer events first. In this specific case, it is possible to see what seem to be duplicate events but they are different events as seen in the timestamps. I merely proceeded to create and delete users to generate telemetry and test everything.
 
+<img width="924" height="233" alt="Pasted image 20260708083630" src="https://github.com/user-attachments/assets/a9626359-0290-4f71-84f2-c33ffdec6196" />
+
+To build the SPL query, we made use of the [Windows Event ID 4720](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4720) (An account was created):
+```
+index=* EventCode=4720
+| eval "New User"=if(EventCode=4720,mvindex(Account_Name,-1),null())
+| where isnotnull("New User")
+| table _time host "New User"
+| sort -_time
+```
+**Query Analysis:**
+ - The first line of the query consists of a simple filter for the logs related to the previously mentioned Windows Event ID 4720;
+ - The second line consists of, once again, the usage of the `eval` command to create a new variable "New User". This new variable will be associated with a condition that will search for the last name in the `Account_Name` field in the Event Code 4720 logs;
+ - The third line of the query makes use of the `where isnotnull` command to filter out null values for the "New User" variable;
+ - Then, we make use of the `table` command to build a table with the time, host and "New User" columns;
+ - Finally, in the last line, we use the `sort` command to sort the events by newest first.
+
+
+#### Deleted Users
+The next table displays the events regarding deleted users, in a similar manner to our previous table.
+
+<img width="920" height="235" alt="Pasted image 20260708083639" src="https://github.com/user-attachments/assets/d2423159-936f-46c8-a7b2-e151fa9dca83" />
+
+To build the SPL query, we followed the same exact logic as the previous query. The only difference was the we made use of the [Windows Event ID 4726](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4726) (A user account was deleted):
+```
+index=* EventCode=4726
+| eval "Deleted User"=if(EventCode=4726,mvindex_(Account_Name,-1),null())
+| where isnotnull("Deleted User")
+| table _time host "Deleted User"
+| sort -_time
+```
+**Query Analysis:**
+ - As previously mentioned, this query follows the exact same logic as the previous one. The only difference being on the Windows Event ID used and the new variable name.
+
+#### Password Changes
+The following table will monitor changes related to user passwords, being regular password changes or password resets.
+
+<img width="920" height="264" alt="Pasted image 20260708083654" src="https://github.com/user-attachments/assets/c2013079-7bb6-42ed-8285-6569a6136a4a" />
+
+For this query we made use of the [Windows Event ID 4723](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4723) (An attempt was made to change an account's password) and [Windows Event ID 4724](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4724) (An attempt was made to reset an account's password):
+```
+index=* (EventCode=4723 OR EventCode=4724)
+| eval User=mvindex(Account_Name,-1)
+| eval Action=case(EventCode=4723,"Password Changed", EventCode=4724,"Password Reset")
+| where isnotnull(User)
+| table _time host User Action
+| sort -_time
+```
+**Query Analysis:**
+ - The first line consists on a very standard filter that filters for both the previously mentioned event IDs;
+ - In the second line, using the `eval` command, we create a new variable "User" and assign it the last value of the `Account_Name` field;
+ - The third line consists of yet another new variable creation, "Action", which will described if there was a password change or a password reset. To do this, we use the `case` command to build the two possible scenarios. If the `EventCode` field matches 4723, then the "Action" variable will have the "Password Changed" value. If the `EventCode` field matches 4724, then the "Action" variable will have the "Password Reset" value;
+ - The following line is a simple filter for null values;
+ - Then, we make use of the `table` command to build a table with the time, host, User and Action columns;
+ - Finally we sort the events by newest first, using `sort`.
+
+#### Kerberoasting Detection
+For this table, I decided to monitor for kerberos service ticket requests and password hash access, to try and detect kerberoasting attempts. _This table in particular should be subject to further review as the result is very noisy, since there are a LOT of service ticket requests happening all the time, making this table borderline useless._
+
+<img width="922" height="278" alt="Pasted image 20260708083703" src="https://github.com/user-attachments/assets/bec7d7e9-7046-4a1d-a2f1-1f486e9032e2" />
+
+For this query we made of the [Windows Event ID 4769](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4769) (A Kerberos Service Ticket was requested) and [Windows Event ID 4782](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4782) (The password hash of an account was accessed):
+```
+index=* (EventCode=4782 OR EventCode=4769)
+| eval User=mvindex(Account_Name,-1)
+| eval Action=case(EventCode=4769,"A Kerberos Service ticket was requested", EventCode=4782,"The password hash of an account was accessed")
+| table _time host User Action
+| sort -_time
+```
+**Query Analysis:**
+ - The first line consists on a simple filter for the previously mentioned Windows Event IDs;
+ - Then, a new variable "User" was created, using the `eval` command;
+ - Once again using `eval`, a new variable "Action" was created. In a similar fashion to the previous query, we used the `case` command to define a case for each Event ID, changing the value stored in "Action" depending on the Event ID;
+ - Then, using the `table` command, a table was created with the time, host, User and Action columns;
+ - The last line sorts the events by newest first, using the `sort` command.
+
+#### Group Membership Changes
