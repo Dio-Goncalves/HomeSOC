@@ -3,7 +3,7 @@
 This dashboard is made of three different tabs: 
   - The [General tab](#General-tab) which will give an overview over the environment;
   - The [Windows tab](#Windows-tab) which will focus on the windows machines;
-  - The "linux" tab which will focus on the linux machines.
+  - The [Linux tab](#Linux-tab) which will focus on the linux machines.
 
 **Observations:** 
  - The time filter for this dashboard is set to match the attack ran on the Simulation 1 page;
@@ -314,3 +314,117 @@ index=* (EventCode=4782 OR EventCode=4769)
  - The last line sorts the events by newest first, using the `sort` command.
 
 #### Group Membership Changes
+This table, as the name suggests, monitors group membership changes. This can be an effective way of achieving privilege escalation and obtaining persistence. To do this, we'll monitor:  
+ - [Windows Event ID 4728](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4728) - A member was added to a security-enabled global group;
+ - [Windows Event ID 4732](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4732) - A member was added to a security-enabled local group;  
+ - [Windows Event ID 4756](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4756) - A member was added to a security-enabled universal group.
+For more information on the scope of each of these group types, please click [here](https://ss64.com/nt/syntax-groups.html). 
+
+<img width="1850" height="375" alt="Pasted image 20260708083724" src="https://github.com/user-attachments/assets/b78b4870-8e06-456e-859c-e78f14a4a190" />
+
+```
+index=* (EventCode=4728 OR EventCode=4732 OR EventCode=4756)
+| eval "Group Type"=case(
+EventCode=4728,"Global Group",
+EventCode=4732,"LocalGroup",
+EventCode=4756,"Universal Group"
+)
+| table _time host Account_Name Group_Name "Group Type"
+```
+**Query Analysis:**
+ - The first line consists on a simple filter for the previously mentioned Windows Event IDs;
+ - Using `eval`, a new variable "Group Type" was created. In a similar fashion to the previous query, we also made use of the `case` command to define a case for each Windows Event ID and, depending on the Windows Event ID, we would store a different value in "Group Type";
+ - The last line is a simple use of the `table` command to build a table with the time, host, Account_Name, Group_Name and Group Type columns;
+ - This query has a clear symptom of the time restraints that this project had, as it could use a filter on the `Group_Name` field to remove unnecessary noise. Maybe filter it to only monitor critical groups like the "Administrators" group.
+
+
+#### Kerberos / Ticket Activity
+This table was meant to monitor general Kerberos ticket activity. I was looking for ways to monitor kerberos activity in general, but looking back it needed further filtering and tuning, since the end result is still too noisy, generating multiple events per minute and giving no clear insight. To build this table we monitored the following:
+ - [Windows Event ID 4768](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4768) - A Kerberos authentication ticket (TGT) was requested;
+ - [Windows Event ID 4769](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4769) - A Kerberos service ticket was requested;
+ - [Windows Event ID 4770](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4770) - A Kerberos service ticket was renewed;
+ - [Windows Event ID 4771](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4771) - Kerberos pre-authentication failed;
+ - [Windows Event ID 4776](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4776) - The domain controller attempted to validate the credentials for an account.
+
+<img width="919" height="375" alt="Pasted image 20260708083740" src="https://github.com/user-attachments/assets/025b28de-37de-4863-b125-8c5d334ad8b8" />
+
+```
+index=* (EventCode=4768 OR EventCode=4768 OR EventCode=4770 OR EventCode=4771 OR EventCode=4776)
+| eval User=mvindex(Account_Name,-1)
+| eval Activity=case(
+EventCode=4768,"TGT Requested",
+EventCode=4769,"Service Ticket Requested",
+EventCode=4770,"Ticket Renewed",
+EventCode=4771,"Pre-Authentication Failed",
+EventCode=4776,"NTLM Authentication"
+)
+| eval Encryption=case(
+Ticket_Encryption_Type="0x11","AES128",
+Ticket_Encryption_Type="0x12","AES256",
+Ticket_Encryption_Type="0x17","RC4-HMAC",
+Ticket_Encryption_Type="0x18","RC4-HMAC-EXP",
+)
+| table _time host User Service_Name Encryption Activity
+| sort -_time
+```
+**Query analysis:**
+ - The logic behind building this query is every similar to the previous ones. The first line consists on filtering for the Windows Event IDs we are looking for;
+ - Then, the "User" variable was created, making use of the `eval` command. The last value of the `Account_Name` field will be stored in this variable;
+ - On the third line, using the `eval` command, the "Activity" variable is created. Here, we'll make use of the `case` command to define a case for each possible Windows Event ID, assigning a value to this variable, depending on the Windows Event ID found;
+ - The same logic is applied when creating the "Encryption" variable. This variable will be useful to visually display the encryption type used in the kerberos activity. To filter unnecessary noise, it would be useful to further filter this field to only show events that use RC4 encryption, as its currently deprecated and presents a major risk for kerberoasting;
+ - Finally, we built a table with time, host User, Service_Name, Encryption and Activity columns.
+
+#### Failed Kerberos
+Even though we've already filtered for the the events in this table, in the previous table, I've decided to create a separate one decicated to Kerberos Authentication Failures. This table will monitor the previously mentioned [Windows Event ID 4771](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4771) and [Windows Event ID 4776](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4776).
+
+<img width="912" height="373" alt="Pasted image 20260708083752" src="https://github.com/user-attachments/assets/300c2cc0-b3a9-426d-ba94-a443405fd2e6" />
+
+```
+index=* (EventCode=4771 OR EventCode=4776)
+| eval User=mvindex(Account_Name,-1)
+| eval Activity=case(
+EventCode=4771,"Kerberos Pre-Auth Failure",
+EventCode=4776,"NTLM Authentication Failure"
+)
+| table _time host User Activity
+| sort -_time
+```
+**Query analysis:**
+ - The first lines consist on a simple filter for the Windows Event IDs we are looking for;
+ - Next, using the `eval` command, we create the "User" variable, populating it with the last value stored on the `Account_Name` field;
+ - Once again using the `eval` command, we create the "Activity" variable. Together with the `case` command, we create a case for each possible ID, populating this variable with the appropriate Windows Event ID description;
+ - Finally, we create a table with the time, host, User and Activity columns and sort the table by time.
+
+
+#### TGT Requests
+This table monitors TGT requests, by simply monitoring [Windows Event ID 4768](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4768). Even though this event is already monitored in previous tables, I felt like it was important to have a table dedicated to this. Looking back, I would probably change the way to present this information and maybe filter it further in order to make this information more actionable.
+
+<img width="1855" height="371" alt="Pasted image 20260708083815" src="https://github.com/user-attachments/assets/6c0330e3-bfb6-4662-a710-f794db67269f" />
+
+```
+index=windows EventCode=4768
+| table _time Account_Name Service_Name
+```
+**Query analysis:**
+ - This is a very simple query, consisting on a simple filter for the Windows Event ID we are looking for, followed by the `table` command, which gives us a table with the time, Account_Name and Service_Name columns.
+
+
+#### Mimikatz Execution
+This table will monitor for [mimikatz](https://github.com/gentilkiwi/mimikatz) usage. This is a very well known tool famous for being able to extract plaintext passwords, hashes and kerberos tickets from memory and also performing a plethora of different kerberos attacks.  
+To achieve this, I monitored for the `*mimikatz*` expression in the `Image` and `CommandLine` fields of the logs. I've also filtered for the sysmon index.
+
+<img width="1852" height="378" alt="Pasted image 20260708083832" src="https://github.com/user-attachments/assets/4c62d8a7-0e69-4dca-bee7-7e88b22fae51" />
+
+```
+index=sysmon (Image="*mimikatz*" OR CommandLine="*mimikatz*")
+| eval User=mvindex(User,-1)
+| table _time host User Image
+```
+**Query analysis:**
+ - The first line consists on an index filter in order to attain the logs stored in the sysmon index and therefore getting only sysmon logs. Then we also filtered for the `*mimikatz*` expression in the `Image` and `CommandLine` fields of the logs;
+ - Then, using the `eval` command, we created the "User" variable, populating it with the last value stored on the `User` field in the log;
+ - Finally, we built the table with the time, host User and Image columns, giving us a table that shows when mimikatz is executed, the user that executes it and which machine it is executed in.
+
+
+## Linux tab
+### Overview
