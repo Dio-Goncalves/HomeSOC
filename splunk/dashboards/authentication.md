@@ -504,3 +504,30 @@ index=* source="/var/log/auth.log" "Failed Password"
 
 
 #### Locked and Unlocked User Accounts
+The following table monitors for Locked and Unlocked User Accounts. This table could be useful in the event of having the users setup in a way so that when they had a certain amount of failed login attempts, they would be locked out. This table could help detect victims of brute force attacks or simply locked users with malicious intent by an attacker in a compromised user.
+
+<img width="1495" height="217" alt="Pasted image 20260708085045" src="https://github.com/user-attachments/assets/4d89b9d0-4621-4dd2-a98a-8fab053439fd" />
+
+```
+index=linux sourcetype=auth-2 COMMAND="/usr/sbin/usermod"
+| rex field=_raw "COMMAND=/usr/sbin/usermod\s+(?<Action>-[LU]|--lock|--unlock)\s+(?<TargetUser>\S+)"
+| eval Activity=case(
+Action="-L","Account Locked",
+Action="--lock","Account Locked",
+Action="-U","Account Unlocked",
+Action="--unlock","Account Unlocked"
+)
+| where isnotnull(TargetUser)
+| table _time host User PWD TargetUser Activity COMMAND
+| sort -_time
+```
+**Query analysis:**
+ - The first line of the query consists on filtering for the appropriate logs. After analyzing the logs, the best approach was to filter for the linux index, the usermod command with `COMMAND=/usr/sbin/usermod` and auth-2 sourcetype;
+ - Since the logs are in raw format, the `rex` command had to be used again. With this command, we filtered for the before mentioned command. We also used a named capture group with `(?<Action>-[LU]|--lock|--unlock)`, which allows us to designate the different possibilities for the executed action (lock or unlock) and store the value in the `Action` variable. After filtering and parsing the `Action` value, we simple parsed the value for the target username and store it under the `TargetUser` variable;
+ - Then by using the `eval` command, we create a new variable, "Activity". Then, using the `case` command, we create different scenarios for this variable. Depending on the value of the "Action" variable, a different value will be stored on the "Activity" variable;
+ - The following line is a simple filter to exclude null values on the "TargetUser" variable;
+ - Then, using the `table` command, a table was built with the time, host User, PWD, TargetUser, Activity and COMMAND columns;
+ - Finally the table was sorted by time, to show the most recent events first.
+
+
+#### User Creation
