@@ -428,3 +428,44 @@ index=sysmon (Image="*mimikatz*" OR CommandLine="*mimikatz*")
 
 ## Linux tab
 ### Overview
+<img width="1867" height="425" alt="Pasted image 20260707111541" src="https://github.com/user-attachments/assets/70e75479-415d-4b61-91ad-646d9241e3c6" />
+<img width="1866" height="484" alt="Pasted image 20260707111557" src="https://github.com/user-attachments/assets/5c9347db-e133-4497-b112-8a891bb7d923" />
+<img width="1865" height="488" alt="Pasted image 20260707111614" src="https://github.com/user-attachments/assets/b3ffceda-740c-46b5-bee3-bf8938bd06ed" />
+<img width="1864" height="394" alt="Pasted image 20260707111630" src="https://github.com/user-attachments/assets/fd6e40f9-81e1-4ed4-affb-46c2eee48393" />
+<img width="1852" height="401" alt="Pasted image 20260707111648" src="https://github.com/user-attachments/assets/d5b67afa-317c-4c10-9e65-11c94ee99fd4" />
+
+
+### In-Depth Analysis
+#### Failed Logons Over Time
+The dashboard begins with a timechart of the failed login attempts over time. This is a nice visual presentation that can quickly indicate if something is off, like a sudden spike in failed attempts.
+
+<img width="734" height="375" alt="Pasted image 20260708084513" src="https://github.com/user-attachments/assets/f4038276-c4cb-434f-af11-37a312fbb551" />
+
+```
+index=* source="/var/log/auth.log" "authentication failure"
+| where isnotnull("user")
+| timechart count
+```
+**Query analysis:**
+ - The first line of the query is a simple filter that queries for the contents of the `auth.log` file. This is a file in Linux that stores all the logs related to authorization and authentication. By analyzing the logs on this file it was also possible to conclude that by adding the expression `"authentication failure"`, we could filter for the failed login attempts, and filter any unwanted noise;
+ - The second line of the query simply filters out null values on the `user` field;
+ - The last line makes use of the `timechart` command to build a timechart with the count of failed login attempts.
+
+
+#### Total Failed Logons
+Next, we have a counter of the total failed login attempts, in the form of a radical. This presents the same information as the previous timechart, but in a different way, providing a nice visual aid by allowing to quickly detect an unusually high number of failed login attempts.
+
+<img width="734" height="183" alt="Pasted image 20260708084533" src="https://github.com/user-attachments/assets/3ca89def-86d7-4f58-99b5-8ed4155493a1" />
+
+```
+index=* source="/var/log/auth.log" "authentication failure"
+| stats count as "Total Failed Logons"
+```
+**Query analysis:**
+ - The first line of this query follows exactly the same logic as the previous one;
+ - The second line consists on using the `stats count` command to get the total amount of failed login attempts and to label the count as "Total Failed Logons".
+
+
+#### Failed Logons by User and Host
+
+
