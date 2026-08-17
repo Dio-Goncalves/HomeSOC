@@ -531,3 +531,109 @@ Action="--unlock","Account Unlocked"
 
 
 #### User Creation
+The following table is meant to simply monitor user creation. This is a very popular method of gaining persistence on the victim machine, so it's important to stay vigilant on this.
+
+<img width="735" height="228" alt="Pasted image 20260708084719" src="https://github.com/user-attachments/assets/dd081148-1ada-4647-b2e0-2856f32e2063" />
+
+```
+index=* source="/var/log/auth.log" "new user:"
+| rex field=_raw "name=(?<CreatedUser>[^,]+)"
+| table _time host CreatedUser
+| sort -_time
+```
+**Query analysis:**
+ - The first line filters for the logs in the `auth.log` file with the added expression of `"new user:"`, to filter for the user creation logs. This was once again achieved, by previously analyzing the logs;
+ - Since the logs are in raw format, the `rex` command was once again used to parse out the new username out of the log and store it under the variable "CreatedUser";
+ - Then, a table was built with the time, host and CreatedUser columns;
+ - Finally the table was sorted by time to show the most recent events first.
+
+
+#### Deleted Users
+The next table was meant to monitor deleted users.
+
+<img width="739" height="223" alt="Pasted image 20260708084743" src="https://github.com/user-attachments/assets/d20d79ee-2da9-4c68-8de6-1e35cd2b7c59" />
+
+```
+index=* source="/var/log/auth.log" "userdel"
+| rex field=_raw "delete user '(?<DeletedUser>[^']+)'"
+| search DeletedUser=*
+| table _time host DeletedUser
+| sort -_time
+```
+**Query analysis:**
+ - Once again, by previously analyzing the logs, the filter of the first line was built. By filtering for the `auth.log` file and `"userdel"` expression, we could obtain the logs related to user deletion;
+ - Since the logs are in raw format, we had to parse the Deleted User out of them, by using the `rex` command. The deleted username is stored under the variable "DeletedUser";
+ - Next, using the `search` command we filter out any possible noise by only searching for events that populate the "DeletedUser" variable, keeping the null values out;
+ - Then we proceed to build the table with the time, host and DeletedUser columns;
+ - Finally, we sort the table by time to show the most recent events first.
+
+
+#### Password Changes
+The following table will monitor password changes across users. It's important to keep an eye on events like this since an attacker can gain persistence like this and lock the victim out of their own machine.
+
+<img width="1493" height="163" alt="Pasted image 20260708084806" src="https://github.com/user-attachments/assets/4d32e231-06c0-4d5b-bf66-33da499184e4" />
+
+```
+index=* source="/var/log/auth.log" "password changed for"
+| rex field=_raw "password changed for (?<TargetUser>\S+)"
+| table _time host TargetUser
+| sort -_time
+```
+**Query analysis:**
+ - By analyzing the logs, it was possible to find the logs related to password changes by filtering for the `auth.log` file and the expression `"password changed for"`;
+ - Since the logs were in raw format, the `rex` command was used to filter out the user which the password was changed and store it under the variable "TargetUser";
+ - Then a table was built with the time, host and TargetUser columns;
+ - Finally the table was sorted by time to show the most recent events first.
+
+
+#### Sudo Activity
+The following table monitors for sudo activity across the linux machines. Given the power that this command has, its very important to monitor activity related to it, considering that a compromised sudo user can be a very big problem.
+
+<img width="740" height="344" alt="Pasted image 20260708084844" src="https://github.com/user-attachments/assets/c4ce6cde-001f-4533-8a76-12894873da77" />
+
+```
+index=* source="/var/log/auth.log" "sudo:"
+| table _time host USER PWD COMMAND
+| where isnotnull(COMMAND)
+| sort -_time
+```
+**Query analysis:**
+ - The first line filters for the logs related with the usage of the sudo command. Once again filtering for the `auth.log` file and the `"sudo:"` expression;
+ - Then a table is built with the host, USER, PWD and COMMAND columns;
+ - On the third line, we filter out the events with null values on the COMMAND field;
+ - Then, the table is sorted by time to show the most recent events first.
+
+
+#### Sudo Administrative Activity
+This table monitors sudo activity, in a similar way to the previous one. The difference is that this one is more descriptive. Looking back, the existence of these two tables is debatable, considering that they showcase the same information in a slightly different way. To reduce visual clutter, it would be wise to keep this table and delete the previous one.
+
+<img width="735" height="375" alt="Pasted image 20260708084859" src="https://github.com/user-attachments/assets/c823bbc4-59cc-457f-adda-bba7df013d7a" />
+
+```
+index=* source="/var/log/auth.log" "sudo:"
+| eval Activity=case(
+like(_raw,"%useradd%"),"User Created",
+like(_raw,"%adduser%"),"User Created",
+like(_raw,"%userdel%"),"User Deleted",
+like(_raw,"%deluser%"),"User Deleted",
+like(_raw,"%usermod -L%"),"User Locked",
+like(_raw,"%usermod -U%"),"User Unlocked",
+like(_raw,"%COMMAND=/usr/bin/passwd%"),"Password Changed",
+)
+| rex field=_raw "usermod\s+-[LU]\s+(?<TargetUser>\S+)"
+| rex field=_raw "useradd\s+(?<TargetUser>\S+)"
+| rex field=_raw "adduser\s+(?<TargetUser>\S+)"
+| rex field=_raw "deluser\s+(?:--remove-home\s+)?(?<TargetUser>\S+)"
+| rex field=_raw "userdel(?:\s+-\S+)*\s+(?<TargetUser>\S+)"
+| rex field=_raw "passwd\s+(?<TargetUser>\S+)"
+| where isnotnull(Activity)
+| table _time host USER TargetUser Activity COMMAND
+| sort -_time
+```
+**Query analysis:**
+ - The first line consists on the same filter used in the previous query.
+ - On the second line we make use of the `eval` command, together with `case` to create a new variable "Activity" and store a descriptive value in it, depending on the parsed command;
+ - Then, since these logs are in raw format, the `rex` command was used to parse out the possible administrative sudo commands and store the target username under the new variable, "TargetUser";
+ - Using `where isnotnull(Activity)`, any logs with null values on the "Activity" variable are filtered out;
+ - Then, a table was built with the time, host, USER, TargetUser, Activity and COMMAND columns;
+ - Finally, the table was sorted by time to show the most recent events first.
