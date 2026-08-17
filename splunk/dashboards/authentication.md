@@ -467,5 +467,40 @@ index=* source="/var/log/auth.log" "authentication failure"
 
 
 #### Failed Logons by User and Host
+The following table, monitors for Failed Login Attempts by User and Host. This allows for quick detection of a potential brute force attack and to quickly find the victim username and machine.
+
+<img width="738" height="174" alt="Pasted image 20260708084553" src="https://github.com/user-attachments/assets/3d6466c5-7d2b-49e9-8861-1b8c1d99ac0b" />
+
+```
+index=* source="/var/log/auth.log" "authentication failure"
+| stats count as "Failed Logons" values(host) as Host by user
+| table user Host "Failed Logons"
+| sort - "Failed Logons"
+```
+**Query analysis:**
+ - Once again, the first line of this query is exactly the same as the previous queries;
+ - The second line makes use of the `stats count` command to count the total amount of failed login attempts, and separate them by Host and User;
+ - The third line of the query is a simple usage of the `table` command to build a table with the user, Host and "Failed Logons" columns;
+ - Finally, we sort the "Failed Logons" column in descending order, so that the user and machine with the most incidences comes first on the table.
+
+#### Failed SSH Logons
+This table, follows the same logic as the previous table but only monitors failed login attempts via SSH. This is a very common vector for brute force attacks so its a good idea to remain vigilant on this port.
+
+<img width="1494" height="185" alt="Pasted image 20260708084625" src="https://github.com/user-attachments/assets/5d82b1d2-3e0e-4e4c-82e4-3f922b17621f" />
+
+```
+index=* source="/var/log/auth.log" "Failed Password"
+| rex field=_raw "for (invalid user)?(?<User>\S+)"
+| stats count as Attempts values(host) as Host by User
+| table User Host Attempts
+| sort - Attempts
+```
+**Query analysis:**
+ - Once again, analyzing the logs in `auth.log`, I realized that to filter for the failed login SSH logs, I had to filter for the expression `"Failed Password"`. With this in mind, the first line consists on this filter;
+ - As these logs were in raw format, the second line makes use of the `rex` command to parse the username out of the raw log and store it in the variable "User";
+ - Then, in a similar fashion to the previous query, the third line makes use of the `stats count` command to count the failed login attempts by Host and User;
+ - The fourth line makes use of the `table` command to build a simple table with the User, Host and Attempts columns;
+ - The last line sorts the Attempts column in descending order, so that we can see the User and Host with the highest amount of failed login attempts first.
 
 
+#### Locked and Unlocked User Accounts
