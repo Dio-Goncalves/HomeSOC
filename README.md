@@ -22,8 +22,8 @@ You can find below the structure of this repository with direct links for each p
 4. [splunk](splunk)
    - [dashboards](splunk/dashboards)
      - [authentication](splunk/dashboards/authentication.md)
-     - endpoint activity
-     - IDS
+     - [endpoint activity](splunk/dashboards/endpoint_activity.md)
+     - [IDS](splunk/dashboards/IDS.md)
 
 ## Lessons Learned
 **Documentation is key**. It was something I had very clear and that paid a lot of attention to. But on a project this big, there were times that due to time constraints from the trial software (mostly Splunk with its 2 month free trial) and also due to the fact that I have a job and have a life outside of this, I didn't document as well as I should. There were times that, while I was assembling the lab and running trials, I didn't document every step in order to avoid repeating myself or documenting unnecessary stuff in case what I was doing didn't work. Later, this proved to be a big mistake and made me lose even more time when building this repository and referencing to some of the things I did previously.  
