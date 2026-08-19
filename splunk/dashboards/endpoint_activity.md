@@ -57,7 +57,7 @@ A common way for attackers to gain persistence is via scheduled tasks. These can
 | sort -_time
 ```
 **Query analysis:**
- - The first line filters for events that either refer to process creation ( [Windows Event ID 1](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90001) ) using the commmand line interface for the task scheduler, `schtasks.exe` or events that refer to file creation ( [Windows Event ID 11](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90011) ), monitoring the directory where files related to scheduled tasks are stored;
+ - The first line filters for events that either refer to process creation ( [Sysmon Event ID 1](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90001) ) using the commmand line interface for the task scheduler, `schtasks.exe` or events that refer to file creation ( [Sysmon Event ID 11](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90011) ), monitoring the directory where files related to scheduled tasks are stored;
  - Then, using the `table` command, a table with the time, host Image, CommandLine and TargetFilename columns is built;
  - Finally, the table was sorted by time, showing the most recent events first.
 
