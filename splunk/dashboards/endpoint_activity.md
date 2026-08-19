@@ -50,6 +50,7 @@ OR like(Process,"%psexec%")
 A common way for attackers to gain persistence is via scheduled tasks. These can fly under the radar rather effectively and are a good way of getting a backdoor to the victim's machine. This table monitors for the creation of scheduled tasks, showing the related images, command line, target filename and, of course, timestamp and host.
 
 <img width="1494" height="303" alt="Pasted image 20260708100101" src="https://github.com/user-attachments/assets/65e44584-c42c-4676-b453-856b5d95a4bf" />
+
 ```
 (index=sysmon EventCode=1 Image="*schtasks.exe*") OR (index=sysmon EventCode=11 TargetFilename="C:\\Windows\\System32\\Tasks\\*")
 | table _time host Image CommandLine TargetFilename
