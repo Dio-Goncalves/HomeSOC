@@ -63,3 +63,45 @@ A common way for attackers to gain persistence is via scheduled tasks. These can
 
 
 #### Powershell Activity
+The following table monitors for powershell activity. By displaying the related images to the powershell process, together with the user and host, it can be helpful in evaluating if the powershell process is malicious. Looking back, even though this table can be useful, its rendered rather useless by the table that will be exposed next. In order to reduce visual clutter, it wouldn't be a bad idea to see this table's presence as optional.
+
+<img width="1494" height="263" alt="Pasted image 20260708100140" src="https://github.com/user-attachments/assets/a72f779a-eb0b-46e5-b544-d44db9727b70" />
+
+```
+index=sysmon EventCode=1 Image="*powershell.exe*"
+| where Image!="C:\Program Files\SplunkUniversalForwarder\bin\splunk-powershell.exe"
+| eval User=mvindex(User,-1)
+| table _time host User Image CommandLine ParentImage
+```
+**Query analysis:**
+ - This query starts by filtering, once again, for [Sysmon Event ID 1](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90001), related to process creation. It also searches for Images that make reference to `powershell.exe`;
+ - Next, images related to the Splunk Universal Forwarder where filtered out to reduce noise;
+ - Then, the last value of the User field was parsed and stored under the variable "User";
+ - Finally the table was built with the time, User, Image, CommandLine and ParentImage columns.
+
+
+#### Suspicious Powershell Commands
+This table gives a different perspective on powershell activity when compared to the last table. This table actually shows the executed commands. As an improvement, it could be useful to implement the `User` field on the table.
+
+<img width="1498" height="443" alt="Pasted image 20260708100204" src="https://github.com/user-attachments/assets/ca68cdc0-7570-4338-b864-d010625e5939" />
+
+```
+index=powershell source="WinEventLog:Microsoft-Windows-Powershell/Operational" EventCode=4104
+(Message="*Invoke-Expression*"
+OR Message="*DownloadString*"
+OR Message="*EncodedCommand*"
+OR Message="*Net.WebClient*"
+OR Message="*Invoke-Mimikatz*"
+OR Message="*iex*"
+OR Message="*net*"
+OR Message="*FromBase64String*"
+| table _time ComputerName Message
+| sort -_time
+```
+**Query analysis:**
+ - The query starts by filtering for the powershell index and the Windows' powershell operational source of data. Notice that there is also a filter for Windows Event ID 4104, this event refers to Powershell Script Block Logging and it captures the text of scrips executed via powershell;
+ - Then, the `Message` field is filtered for the most common powershell utilities used in attacks;
+ - Finally a table is built with the time, ComputerName and Message columns, and sorted by time to show the most recent events first.
+
+
+#### Parent and Child Process Relationships
