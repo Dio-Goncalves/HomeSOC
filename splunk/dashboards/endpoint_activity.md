@@ -15,7 +15,7 @@ For reference on the Splunk commands, please refer to this [page](https://help.s
 
 ### In-Depth Analysis
 #### Suspicious Process Execution
-The first table of the Windows dashboard, showcases the execution of suspicious processes. By keeping an eye on commonly used processes in attacks, associated command lines and their parent images, it is possible to quickly detect any anomaly.
+The first table of the Windows dashboard, showcases the execution of suspicious processes. By keeping an eye on commonly used utilities in attacks, associated command lines and their parent images, it is possible to quickly detect any anomaly.
 
 <img width="1851" height="379" alt="Pasted image 20260708100031" src="https://github.com/user-attachments/assets/741ddd11-6e07-4bbd-b700-dfceebefc923" />
 
@@ -105,3 +105,56 @@ OR Message="*FromBase64String*"
 
 
 #### Parent and Child Process Relationships
+Similar to the Suspicious Process Execution table, this table monitors for the relationships between parent and child processes, monitoring the parent images that are usually common vectors of attack. It also displays executed commands. The difference in this table is that it focuses on the the parent image, rather than the child image like the first one does.
+
+<img width="1488" height="460" alt="Pasted image 20260708100236" src="https://github.com/user-attachments/assets/b5a5dcc5-f6b4-437e-b65b-0575ad7850db" />
+
+```
+index=* source="WinEventLog:Microsoft-Windows-Sysmon/Operational" EventCode=1
+| search ParentImage="*\\winword.exe"
+OR ParentImage="*\\excel.exe"
+OR ParentImage="*\\outlook.exe"
+OR ParentImage="*\\powershell.exe"
+OR ParentImage="*\\cmd.exe"
+| eval User=mvindex(User,-1)
+| table _time host User ParentImage Image CommandLine
+| sort -_time
+```
+**Query analysis:**
+ - The query starts by filtering for the sysmon operational source and [Sysmon Event ID 1](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90001), related to process creation;
+ - Then, using the [search](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/search) command, the `ParentImage` field is filtered to look for applications that are common attack vectors, like powershell, cmd or even microsoft office tools, via macros;
+ - Then, the final value of the `User` field is parsed and stored on the variable "User";
+ - Finally, using the `table` command, a table with the time, host, User, ParentImage, Image and CommandLine columns is built. The table is sorted by time to show the most recent events first.
+
+
+#### Registry Persistence
+This table monitors registry key activity, which is a very common way of gaining persistence on a machine. With this a program can configure itself to run automatically when Windows or a user starts.
+
+<img width="1496" height="292" alt="Pasted image 20260708100258" src="https://github.com/user-attachments/assets/9d5a4960-ae20-452d-b8df-13c29e047c87" />
+
+```
+index=* source="WinEventLog:Microsoft-Windows-Sysmon/Operational" (EventCode=12 OR EventCode=13) (TargetObject="*\\Run\\*" OR TargetObject="*\\RunOnce\\*" OR TargetObject="*\\StartupApproved*")
+| eval User=mvindex(User,-1)
+| table _time host User TargetObject Details Image
+| sort -_time
+```
+**Query analysis:**
+ - The query starts by searching across various indexes but only for events coming from the Sysmon Operational log. Then, a filter is applied for the [Sysmon Event ID 12](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90012) ( Registry object create and delete ) and [Sysmon Event ID 13](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90013) ( Registry value set ). Then, the `TargetObject` field was also filtered for persistence-related registry locations, which are related to programs that execute automatically. The `Run` location refers to automatic execution when the user logs in, the `RunOnce` is similar but it executes something once and then removes the entry and, finally the `StartupApproved` field is associated with Windows' management of startup applications;
+ - Then, the final value of the `User` field is parsed and stored under the variable "User";
+ - Using the `table` command, a table was built with the time, host, User, TargetObject, Details and Image columns. In this case, the `TargetObject` field refers to the registry value that was affected, the `Details` field to the data involved in the operation and the `Image` field to the process responsible for the registry activity;
+ - Finally the table was sorted by time to show the most recent events first.
+
+
+## Linux tab
+### Overview
+<img width="1869" height="429" alt="Pasted image 20260708100358" src="https://github.com/user-attachments/assets/eb3798ce-7a37-4571-94c0-7fe5dd888f02" />
+<img width="1858" height="384" alt="Pasted image 20260708100409" src="https://github.com/user-attachments/assets/8df133b3-0610-475d-b6b3-7908d6ae2f7a" />
+<img width="1855" height="386" alt="Pasted image 20260708100424" src="https://github.com/user-attachments/assets/5e40d4a4-30d6-4ab7-9391-11292c37cb3b" />
+<img width="1854" height="264" alt="Pasted image 20260708100435" src="https://github.com/user-attachments/assets/2581e9c6-e006-410a-a770-a029cf126d24" />
+
+### In-Depth Analysis
+#### Sensitive Command Execution
+
+
+
+
