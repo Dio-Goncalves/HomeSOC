@@ -1,6 +1,7 @@
 # IDS Dashboard
 
-This dashboard is dedicated to the IDS used in this lab, Suricata and its alerts. This dashboard will be dedicated to port scans, since it was the major focus for the usage of this IDS. Make sure to make use of the following [page](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/abstract) for reference on the Splunk commands.
+This dashboard is dedicated to the IDS used in this lab, Suricata and its alerts. This dashboard will be dedicated to port scans, since it was the major focus for the usage of this IDS.  
+Make sure to make use of the following [page](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/abstract) for reference on the Splunk commands.
 
 ## Overview
 <img width="1866" height="394" alt="Pasted image 20260707103909" src="https://github.com/user-attachments/assets/89196bd1-354e-44f1-841a-853986841d9f" />
