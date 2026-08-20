@@ -11,8 +11,8 @@ You can find below the structure of this repository with direct links for each p
 2. attacks & detection
    - Simulation 1
 3. [setup](setup)
-   - pfSense
-     - Suricata
+   - [pfSense](setup/pfsense/pfsense.md)
+     - [Suricata](setup/pfsense/suricata/suricata.md)
    - Linux Server
      - Splunk
    - Windows Server
