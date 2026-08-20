@@ -154,7 +154,130 @@ index=* source="WinEventLog:Microsoft-Windows-Sysmon/Operational" (EventCode=12 
 
 ### In-Depth Analysis
 #### Sensitive Command Execution
+This table focuses on monitoring the execution of sensitive commands, commonly used with malicious intents.
+
+<img width="740" height="346" alt="Pasted image 20260708100454" src="https://github.com/user-attachments/assets/4f2ffb0d-09e4-43bb-8d48-d4b9ba8e4a4c" />
+
+```
+index=* source="/var/log/auth.log" "sudo:"
+| rex field=_raw "COMMAND=(?<Command>.+)$"
+| search COMMAND IN (
+"*useradd*",
+"*adduser*",
+"*userdel*",
+"*deluser*",
+"*passwd*",
+"*usermod*",
+"*systemctl*",
+"*service*",
+"*visudo*",
+)
+| table _time host USER PWD Command
+| sort -_time
+```
+**Query analysis:**
+ - The first line of the query filters for the `auth.log` file, together with the expression `sudo:`, looking for logs that refer to command execution using sudo;
+ - The next line of the query, makes use of the `rex` command to parse out the executed commands out of the raw logs and store them in the "Command" variable;
+ - Next, the `search` command is used once again to make an intermediary search and match the found Command with a list of sensitive linux-based commands. It is possible to see variants of the same command in this list, like `userdel` and `deluser`, that's because there are Linux and Debian machines in this environment and both need to be covered;
+ - The next line, using the `table` command, builds a table with the time, host, user, current working directory (pwd) and command columns;
+ - Finally the table is sorted by time to show the most recent events first.
 
 
+#### Sudo Activity
+This table monitors for all sudo activity. Any command that that is executed using sudo, show appear in this table. Given the power that the sudo has, it is imperative to monitor its usage since it can be a major problem in case of compromise. Looking back, this table effectively renders the previous one obsolete and one could consider removing the previous table to streamline the dashboard and reduce visual clutter.
+
+<img width="736" height="359" alt="Pasted image 20260708100517" src="https://github.com/user-attachments/assets/756dd1ff-73a4-4c15-bc00-6f50b4fa1f09" />
+
+```
+index=* source="/var/log/auth.log" "sudo:"
+| rex field=_raw "COMMAND=(?<Command>.+)$"
+| where isnotnull(USER)
+| table _time host USER PWD Command
+| sort -_time
+```
+**Query analysis:**
+ - The logic behind the first two lines of this query is the same as the previous one;
+ - The third line filters out events that have null values on the `USER` field;
+ - Using the `table` command, the fourth line build a table with the time, host user, current working directory and command columns;
+ - Finally, the table is sorted by time to show the most recent events first.
 
 
+#### Successful SSH Logins
+This table is designed to monitor successful SSH login events. Conceptually, this table should be rather noisy with benign traffic, considering that it is normal to have successful login attempts. It would be wise to think about another way to implement this table or simply remove it from the dashboard. It is also debatable that this table should be in the authentication dashboard instead of this one, considering that we are talking about SSH.
+
+<img width="739" height="289" alt="Pasted image 20260708100543" src="https://github.com/user-attachments/assets/cefd396c-e21b-4528-b11b-0d586014f917" />
+
+```
+index=* source="/vat/log/auth.log" sshd "Accepted password"
+| rex field=_raw "for (?<User>\S+)"
+| rex field=_raw "from (?<SourceIP>\S+)"
+| table _time host User SourceIP
+| sort -_time
+```
+**Query analysis:**
+ - The first line of the query filters for events related to successful SSH logins in the `auth.log` file;
+ - The second line parses the username out of the raw logs and stores it under the "User" variable;
+ - The third line parses the source IP address out of the raw logs and stores it under the "SourceIP" variable;
+ - Next, using the `table` command, a table with the time, host, User and SourceIP columns is built;
+ - Finally, the table is sorted by time to show the most recent events first.
+
+
+#### Failed SSH Logins
+This table is the opposite of the previous one, monitoring Failed SSH login events. Very important to monitor for brute-force attacks, since SSH is usually a common vector of this type of attack. Just like the previous table, it should be considered to move this table to the authentication dashboard, considering we are dealing with SSH.
+
+<img width="734" height="365" alt="Pasted image 20260708100602" src="https://github.com/user-attachments/assets/26942851-a1a8-448a-a6a0-3be6ce910df4" />
+
+```
+index=* source="/var/log/auth.log" sshd "Failed password"
+| rex field=_raw "for (?:invalid user )?(?<User>\S+)"
+| rex field=_raw "from\s+(?<SourceIP>\S+)"
+| table _time host User SourceIP
+| sort -_time
+```
+**Query analysis:**
+ - The first line of the query filters for events related to failed SSH logins in the `auth.log` file;
+ - The second line of the query parses the username out of the raw log and stores it in the "User" variable;
+ - The third line parses the source IP address out of the raw log and stores it under the "SourceIP" variable;
+ - Next, using the `table` command, a table with the time, host, User and SourceIP columns is built;
+ - Finally, the table is sorted by time to show the most recent events first.
+
+#### Service Monitoring and Changes
+This table monitors for service monitoring and changes, using the `systemctl` command. This can be a very useful command for attackers to monitor and weaken the victim's machine.
+
+<img width="1498" height="372" alt="Pasted image 20260708100743" src="https://github.com/user-attachments/assets/d92075f4-9576-4e31-b020-012007bb055f" />
+
+```
+index=linux source="/var/log/auth.log"
+| rex field=_raw "sudo:\s+(?<Invoker>\S+)\s+:"
+| rex field=_raw "USER=(?<TargetUser>[^;]+)"
+| rex field=_raw "COMMAND=(?<Command>.*)"
+| search Command="/usr/bin/systemctl*"
+| table _time host Invoker TargetUser Command
+| sort -_time
+```
+**Query analysis:**
+ - The first line of the query filters for events in the `auth.log` file, in splunk's linux index;
+ - The second line makes use of the `rex` command to parse the username that executes the command out of the raw log. This username is then stored under the variable "Invoker";
+ - The third line, also using the `rex` command, parses out the user field from the raw logs and stores it under the "TargetUser" variable. This line could be erased from this query since it'll always be root when we execute the `systemctl` command with sudo. Having the "Invoker" column renders this "TargetUser" rather obsolete, it was merely kept to showcase the possibility of parsing this value out of the log;
+ - Next, the executed command was parsed out of the raw log and then stored under the variable "Command", also using the `rex` command;
+ - Using the `search` command, an intermediary search was made to match the events that were found with the `systemctl` command;
+ - Then, a table was built with the time, host, Invoker, TargetUser and Command columns. Once again, the TargetUser column could be kept out of this table;
+ - Finally, the table was sorted by time to show the most recent events first.
+
+
+#### Cron Changes
+This table monitors cron changes. This is a very common vector used by attackers to gain persistence on machines, so its imperative to monitor this kind of activity.
+
+<img width="1498" height="372" alt="Pasted image 20260708100743" src="https://github.com/user-attachments/assets/a0498fb3-cb7d-44c6-92a5-9a4c549fe7b8" />
+
+```
+index=linux source="/var/log/syslog" crontab
+| rex field=_raw "crontab[\d+\]: \((?<User>[^\)]+)\)\s+(?<Action>.*)"
+| table _time host User Action
+| sort -_time
+```
+**Query analysis:**
+ - The first line filters for the syslog logs, with the added `crontab` expression to filter specifically for the logs related to crontab;
+ - Next, using the `rex` command, the username and action are parsed out of the raw logs and stored under the variables "User" and "Action", respectively;
+ - Then, using the `table` command, a table with the time, host, User and Action is built;
+ - Finally, the table is sorted by time to show the most recent events first.
