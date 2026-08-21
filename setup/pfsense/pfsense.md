@@ -46,3 +46,8 @@ Click "Install" and confirm.
 <img width="1146" height="530" alt="Pasted image 20260519161319" src="https://github.com/user-attachments/assets/285fd16f-6641-4a17-bad6-e743f21785b7" />
 
 ## Setting up Suricata
+I've banged my head against the wall quite a bit while setting up suricata. I spent a lot of time trying to get the EVE JSON logs to work but didn't manage to do so and the same thing happened with Suricata's default rules.
+
+Eventually, I ended up setting up a custom suricata rule that would monitor for a possible port scan. The rule simply monitors TCP traffic from the OPT1 network (where the Kali laptop resides) to the LAN network (internal network) on all ports. The rules generates a "POSSIBLE PORT SCAN" alert when it detects matching traffic.
+
+<img width="1116" height="497" alt="image" src="https://github.com/user-attachments/assets/f318ed88-84d9-499c-bd05-1ab6c582573d" />
