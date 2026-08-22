@@ -69,5 +69,27 @@ Add-ADGroupMember -Identity "Domain Admins" -Members admin
 ```
 
 ## Editing Group Policies
+To get telemetry from Windows, Group Policies need to be edited. On the Server Manager GUI, on the top-right, click on "Tools" and then "Group Policy Management".
 
+Next, in "domain.local", inside "Group Policy Objects", right click on "Default Domain Controllers Policy" and click "Edit". Then, the Group Policy Management Editor window opens, on "Computer Configuration" -> "Windows Settings" -> "Security Settings" -> "Advanced Audit Policy Configuration" -> "Audit Policies" we can find what we need to setup.
+
+<img width="1111" height="668" alt="Pasted image 20260514010107" src="https://github.com/user-attachments/assets/bf20b8f9-e195-4aca-82a1-860935e29488" />
+
+### Domain Controller Credential Validation
+Starting by "Account Logon", double click it and setup "Audit Credential Validation" to success + failure. Press "Apply" and "OK".
+
+<img width="1164" height="636" alt="Pasted image 20260514010518" src="https://github.com/user-attachments/assets/88afe544-b8c6-4e29-8278-3d3c4d63ff29" />
+
+Next, do the same for "Audit Kerberos Authentication Service" and "Audit Kerberos Service Ticket Operations".
+
+<img width="430" height="87" alt="Pasted image 20260514010646" src="https://github.com/user-attachments/assets/4d906ab8-8fee-453e-a90c-419a6943ee7e" />
+
+### Account Management
+Next, on the Audit Policies is Account Management tab. Here we'll toggle the telemetry related to user account management, which is very important to detect persistence techniques and also security group management which is not only useful for persistence techniques but also privilege escalation.
+
+In this tab, setup "Audit Security Group Management" and "Audit User Account Management" to Success and Failure. After this we'll be able to trigger events such as [Windows Event ID 4720](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4720) ( User Account was created ) and [Windows Event ID 4728](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4728) ( A member was added to a security-enabled global group ), among many other events.
+
+<img width="801" height="662" alt="image" src="https://github.com/user-attachments/assets/bf970b19-6a1f-4dac-87e8-d3d89afc393b" />
+
+### Logon/Logoff
 
