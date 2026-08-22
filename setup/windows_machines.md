@@ -22,11 +22,23 @@ Once there, if its not picked yet, pick the option to "Use the following IP addr
 
 Then, pick the desired IP address, just make sure it matches with the network that was previously setup in pfSense for the internal network interface. Same goes with subnet mask, considering you're most likely using a /24 network, the subnet mask will be 255.255.255.0. Since we want to use pfSense as our default gateway, the IP address for the default gateway should be pfSense's IP address in the internal network.
 
-You should end up with something along these lines:
+You should end up with something along these lines:  
+
 <img width="372" height="136" alt="image" src="https://github.com/user-attachments/assets/7b9de6e4-df46-4d82-8715-201b36126df1" />
 
-Then, for the DNS server we should set it up with the loopback address, 127.0.0.1. This is important to guarantee stability in case any problem occurs like if the network interface breaks or the server's static IP accidentally changes.
+Then, for the DNS server we should set it up with the loopback address, 127.0.0.1. This is important to guarantee stability in case any problem occurs like if the network interface breaks or the server's static IP accidentally changes.  
+
 <img width="369" height="89" alt="image" src="https://github.com/user-attachments/assets/1c56814f-0e2b-43a9-87ad-143f45de395f" />
 
 Once you're done just click "OK".
+
+You can check if the changes were done correctly on powershell using the command:
+```
+ipconfig /all
+```
+
+To change the name of a network adapter in powershell, you can also use the following command:
+```
+Rename-NetAdapter -Name "original-name" -NewName "new-name"
+```
 
