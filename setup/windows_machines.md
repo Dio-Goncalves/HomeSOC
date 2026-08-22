@@ -42,3 +42,32 @@ To change the name of a network adapter in powershell, you can also use the foll
 Rename-NetAdapter -Name "original-name" -NewName "new-name"
 ```
 
+## Adding a new user to the Domain Admin group
+I think that its generally a good idea to avoid using the Administrator user for general use and only keep it for what its strictly necessary, much like the root user for Linux systems.
+
+Considering that we'll be covering Group Policy Management, in this segment a quick rundown will be done on how to add a new user to the Domain Admins Active Directory Group. Then, the Policy Management part, and other Active Directory management tasks, can be done with the newly added user.
+
+Start by searching "Active Directory Users and Computers" and access it.
+
+<img width="843" height="648" alt="image" src="https://github.com/user-attachments/assets/f4d62343-9e11-42e3-8fa1-b3eb6a4f627e" />
+
+Then, access the "Users" folder.
+
+<img width="753" height="528" alt="Pasted image 20260514004658" src="https://github.com/user-attachments/assets/876fc7f6-ec42-4396-a2af-e612a39a3663" />
+
+Next, on the right column, double click on "Domain Admins", go to "Members" and click "Add...". Write the username that you wish to add and click on "Check Name. Select the username and click "OK". In the example below, I added the user "Admin".
+
+<img width="1206" height="679" alt="Pasted image 20260514005037" src="https://github.com/user-attachments/assets/9bd8c6d0-4ee6-4542-bb52-cb95207dbb64" />
+
+With the `whoami /groups` command, you can check if the user your currently on belongs to this group.
+
+<img width="1225" height="300" alt="Pasted image 20260514005454" src="https://github.com/user-attachments/assets/3e8dd08b-7c53-41bf-8bc4-23930e650434" />
+
+An alternative way to do all this, would be to simply execute the following powershell command. Keep in mind that the command below is considering the username admin (that shows in the end of the command). You'd have to replace it with your own.
+```
+Add-ADGroupMember -Identity "Domain Admins" -Members admin
+```
+
+## Editing Group Policies
+
+
