@@ -20,6 +20,9 @@ I've decided to include some Windows machines on this project to be able to work
 2. [Setting up the Windows 11 endpoint VM](#Setting-up-the-Windows-11-endpoint-VM)
    - [Include the machine on the AD domain](#Include-the-machine-on-the-AD-domain)
    - [Network connection setup](#Network-connection-setup)
+   - [Splunk Universal Forwarder](#Splunk-Universal-Forwarder)
+   - [Sysmon Setup](#Sysmon-Setup)
+   - [PowerShell Logging](#PowerShell-Logging)
 
 # Setting up the Windows Server VM
 Before booting the machine, in virtualbox, this machine will only be working with one network adapter, connected to our internal network.
@@ -266,5 +269,20 @@ Then, to setup the DNS server, we'll want to refer to our DC for this. Consideri
 Next, run the command `nslookup domain.local` and you should see the DC's IP address on the "Address" field. For the example below, the DC's IP was 10.10.10.10, at the time.
 
 <img width="466" height="236" alt="Pasted image 20260517180944" src="https://github.com/user-attachments/assets/f0b3f3b9-5703-4a29-bf0d-c6a27262e040" />
+
+[Back to top](#Contents)
+
+## Splunk Universal Forwarder
+To install and setup Splunk Universal Forwarder, the procedure is exactly the same as the [one from the Windows Server VM](#Installing-Splunk-Universal-Forwarder), so please refer to it.
+
+[Back to top](#Contents)
+
+## Sysmon Setup
+To install and setup Sysmon, the procedure is exactly the same as the [one from the Windows Server VM](#Setting-up-Sysmon), so please refer to it.
+
+[Back to top](#Contents)
+
+## PowerShell Logging
+To setup PowerShell Logging, the procedure is exactly the same as the [one from the Windows Server VM](#Toggle-PowerShell-Logging), so please refer to it.
 
 [Back to top](#Contents)
