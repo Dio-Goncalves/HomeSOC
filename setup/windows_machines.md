@@ -153,9 +153,33 @@ Once the setup is done, head to the directory `C:\Program Files\SplunkUniversalF
 
 <img width="1918" height="916" alt="image" src="https://github.com/user-attachments/assets/c129fb3b-a6ed-41fc-9013-6c8218652f66" />
 
-Once you're done, open a powershell terminal and head to the `C:\Program Files\SplunkUniversalForwarder\bin"` directory and restart Splunk with the `.\splunk restart` command.
+The picture above already has lines setup for sysmon logs, which will be setting up next. Also, notice the presence of indexes. These are a nice way to organize logs in Splunk, allowing you to separate logs in an organized manner instead of having them stored all together. Writing the indexes in this file tells the universal forwarder where it has to send each of these logs.
+
+Once you're done, open a powershell terminal and head to the `C:\Program Files\SplunkUniversalForwarder\bin` directory and restart Splunk with the `.\splunk restart` command.
 
 <img width="1095" height="339" alt="Pasted image 20260515130146" src="https://github.com/user-attachments/assets/62f6e183-1137-4dfc-89bd-9cee986641b8" />
 
 ## Setting up Sysmon
+To begin, download Sysmon from the official [site](https://download.sysinternals.com/files/Sysmon.zip). Then, it is also important to download a sysmon config file, the best one to begin with will be [SwiftOnSecurity's sysmon config file](https://github.com/swiftonsecurity/sysmon-config).
 
+With both the tools downloaded on the same directory and the initial Sysmon zip file decompressed, run the command `.\Sysmon64.exe -accepteula -i sysmonconfig.xml`
+
+<img width="620" height="291" alt="Pasted image 20260515162925" src="https://github.com/user-attachments/assets/9b1b9300-b46f-44ed-b1f2-c56011b4319f" />
+
+To make sure that it was done correctly, run the command `Get-Service Sysmon64`.
+
+<img width="304" height="89" alt="Pasted image 20260515163033" src="https://github.com/user-attachments/assets/f99e11fd-3b78-493d-a91f-8adc3012f557" />
+
+If you're following this guide in a sequence, you should have your Splunk Universal Forwarder `inputs.conf` file setup to include these logs. If not, head to `C:\Program Files\SplunkUniversalForwarder\etc\system\local` and add the following line.
+
+<img width="436" height="70" alt="image" src="https://github.com/user-attachments/assets/d369f7f6-04b9-4ad3-a0cc-efc957e03547" />
+
+After every change to the `inputs.conf` file, open a powershell terminal and head to the `C:\Program Files\SplunkUniversalForwarder\bin` directory and restart Splunk with the `.\splunk restart` command.
+
+Next, you can head to Splunk and check for these logs with the command `index=sysmon sourcetype="WinEventLog:Microsoft-Windows-Sysmon/Operational"`
+
+<img width="1908" height="901" alt="Pasted image 20260515163523" src="https://github.com/user-attachments/assets/8d02c4bd-bb0f-4ce0-9f4c-b7ecc81ecb1b" />
+
+You can also generate a bunch of [Sysmon Event ID 1](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90001) logs by opening a powershell terminal and executing commands like `notepad`, `whoami`, `ipconfig` or a simple `ping 8.8.8.8`.
+
+<img width="1889" height="876" alt="Pasted image 20260515164052" src="https://github.com/user-attachments/assets/db5725cd-98a1-4593-b093-251e5859540d" />
