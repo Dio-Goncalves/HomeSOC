@@ -240,6 +240,10 @@ You can also generate a bunch of [Sysmon Event ID 1](https://www.ultimatewindows
 # Setting up the Windows 11 endpoint VM
 Considering that most of the setup for this machine will be the same as the Windows Server VM, given that they are both Windows machines, this section will be more streamlined than the previous one, to avoid repetition. Please refer to the previous section in case something isn't clear enough, I'll also make references to the previous section.
 
+Just like the Windows Server VM, before booting the machine, in virtualbox, this machine will only be working with one network adapter, connected to our internal network.
+
+<img width="388" height="49" alt="image" src="https://github.com/user-attachments/assets/581b4312-3213-4e43-a5c5-b2c2108f9cac" />
+
 As mentioned for the Windows Server VM, you can start by renaming the machine with the command `Rename-Computer -NewName "yourname" -Restart` and also, the internet adapter with the command `Rename-NetAdapter -Name "oldname" -NewName "newname"
 
 <img width="1005" height="227" alt="Pasted image 20260517180221" src="https://github.com/user-attachments/assets/823161de-a27f-4d39-b6ac-eb5410441a6a" />
@@ -273,7 +277,11 @@ Next, run the command `nslookup domain.local` and you should see the DC's IP add
 [Back to top](#Contents)
 
 ## Splunk Universal Forwarder
-To install and setup Splunk Universal Forwarder, the procedure is exactly the same as the [one from the Windows Server VM](#Installing-Splunk-Universal-Forwarder), so please refer to it.
+To install and setup Splunk Universal Forwarder, with the exception of the `inputs.conf` file, the procedure is exactly the same as the [one from the Windows Server VM](#Installing-Splunk-Universal-Forwarder), so please refer to it.
+
+Make sure to setup the `input.conf` file as shown on the picture below.
+
+<img width="509" height="517" alt="image" src="https://github.com/user-attachments/assets/2070ab95-0963-430e-954f-ea4df1cb70c6" />
 
 [Back to top](#Contents)
 
@@ -286,3 +294,10 @@ To install and setup Sysmon, the procedure is exactly the same as the [one from 
 To setup PowerShell Logging, the procedure is exactly the same as the [one from the Windows Server VM](#Toggle-PowerShell-Logging), so please refer to it.
 
 [Back to top](#Contents)
+
+## Activate RDP
+For the attack simulation that I'll do, I chose to use RDP as an attack vector. To it to be possible, RDP must be turned on. This is only for demonstration purposes, for general use it is advised to keep RDP turned off as its very vulnerable to attacks and a very common attack vector.
+
+In "Settings", head to "System" and then look for "Remote Desktop". Select it and when inside simply turn On Remote Desktop.
+
+<img width="706" height="131" alt="image" src="https://github.com/user-attachments/assets/ba3cb531-785c-461f-9fbd-ed6eb736f937" />
