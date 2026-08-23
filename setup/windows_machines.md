@@ -145,3 +145,17 @@ Next, Enable "Script Block Logging" and "Powershell Transcription". For Powershe
 Once done, apply the changes on a powershell terminal by running the command `gpupdate /force`.
 
 ## Installing Splunk Universal Forwarder
+Download the Splunk Universal Forwarder setup from the [official Splunk website](https://www.splunk.com/en_us/download/universal-forwarder.html). The universal forwarder, is the tool that collects data remotely from various sources and forwards it to Splunk.
+
+There will be a time when you'll be asked to setup the receiving indexer, here you'll have to setup with the IP of the machine that is hosting the Splunk service, in this case the Linux Server VM, and the port that is setup for that purpose, in this case port 9997.
+
+Once the setup is done, head to the directory `C:\Program Files\SplunkUniversalForwarder\etc\system\local`. Here, create a file called "inputs.conf", which will be the file that will tell the universal forwarder which logs to collect.
+
+<img width="1918" height="916" alt="image" src="https://github.com/user-attachments/assets/c129fb3b-a6ed-41fc-9013-6c8218652f66" />
+
+Once you're done, open a powershell terminal and head to the `C:\Program Files\SplunkUniversalForwarder\bin"` directory and restart Splunk with the `.\splunk restart` command.
+
+<img width="1095" height="339" alt="Pasted image 20260515130146" src="https://github.com/user-attachments/assets/62f6e183-1137-4dfc-89bd-9cee986641b8" />
+
+## Setting up Sysmon
+
