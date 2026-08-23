@@ -130,3 +130,18 @@ For this category, we'll setup the "Audit Security State Change" and "Audit Secu
 On a powershell terminal with admin rights, run the command `gpupdate /force`. To check if the policies were applied correctly, run the command `auditpol /get /category:*`.
 
 ## Toggle PowerShell Logging
+To toggle powershell logging, on the Server Manager app, click on "Tools" and then "Group Policy Management". Inside `domain.local`, go to "Group Policy Objects" and right click on "Default Domain Controllers Policy" and then click "Edit". On the new windows, go to "Computer Configuration" -> "Policies" -> "Administrative Templates" -> "Windows Components" -> "Windows Powershell".
+
+<img width="1151" height="647" alt="Pasted image 20260514224903" src="https://github.com/user-attachments/assets/f8d51344-7eca-4fcc-aef4-65b96f18e010" />
+
+Double click on "Turn on Module Logging", pick "Enabled" and then click on "Show..." and add a wildcard with `*`. Press "OK" and "Apply".
+
+<img width="1132" height="643" alt="Pasted image 20260514225045" src="https://github.com/user-attachments/assets/87d3fc14-8edd-40c6-927e-2c080fe91536" />
+
+Next, Enable "Script Block Logging" and "Powershell Transcription". For Powershell Transcription, add the directory "C:\PSTranscripts". Powershell transcription is essentially a session logging for Powershell that creates human-readable text files containing the commands executed in Powershell. In this case, the output of this logging will be sent to the directory `C:\PSTranscripts`.
+
+<img width="1083" height="741" alt="Pasted image 20260514225303" src="https://github.com/user-attachments/assets/ddb71e92-8613-464c-96bf-b09ad26cb398" />
+
+Once done, apply the changes on a powershell terminal by running the command `gpupdate /force`.
+
+## Installing Splunk Universal Forwarder
