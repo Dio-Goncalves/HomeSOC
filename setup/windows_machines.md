@@ -85,11 +85,48 @@ Next, do the same for "Audit Kerberos Authentication Service" and "Audit Kerbero
 <img width="430" height="87" alt="Pasted image 20260514010646" src="https://github.com/user-attachments/assets/4d906ab8-8fee-453e-a90c-419a6943ee7e" />
 
 ### Account Management
-Next, on the Audit Policies is Account Management tab. Here we'll toggle the telemetry related to user account management, which is very important to detect persistence techniques and also security group management which is not only useful for persistence techniques but also privilege escalation.
+Next, on the Audit Policies is Account Management category. Here we'll toggle the telemetry related to user account management, which is very important to detect persistence techniques and also security group management which is not only useful for persistence techniques but also privilege escalation.
 
 In this tab, setup "Audit Security Group Management" and "Audit User Account Management" to Success and Failure. After this we'll be able to trigger events such as [Windows Event ID 4720](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4720) ( User Account was created ) and [Windows Event ID 4728](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4728) ( A member was added to a security-enabled global group ), among many other events.
 
 <img width="801" height="662" alt="image" src="https://github.com/user-attachments/assets/bf970b19-6a1f-4dac-87e8-d3d89afc393b" />
 
 ### Logon/Logoff
+The Logon/Logoff category is responsible for the telemetry related to, as the name suggests, logon and logoff events. 
 
+On this tab, we'll setup the subcategories "Audit Logoff", "Audit Logon" and "Audit Special Logon" for Success and Failure. After setting this tab up, events such as [Windows Event ID 4624](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4624) ( An account was successfully logged on ) and [Windows Event ID 4624](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4625) ( An account was successfully logged off ) will be triggered.
+
+<img width="454" height="269" alt="image" src="https://github.com/user-attachments/assets/2c508142-d9f1-4c15-8aee-f9d29a718e05" />
+
+### DS Access
+This category monitors changes in directory service. Any changes made to objects in Active Directory will generate an alert.
+
+To setup this tab, the subcategories "Audit Directory Service Access" and "Audit Directory service Changes" need to be setup to Success and Failure. After setting this tab up, events such as [Windows Event ID 4662](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4662) ( An operation was performed on an object ) or [Windows Event ID 5137](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=5137) ( A directory service object was created ) will be triggered.
+
+<img width="424" height="115" alt="image" src="https://github.com/user-attachments/assets/d572eb6c-3f6a-473c-bc91-8424a626a9e4" />
+
+### Policy Change
+The Policy Change category detects changes to the security policies that govern Windows machines. This can be valuable to a SOC since an attacker who gets administrative privileges may try to weaken auditing or security controls to make their activity harder to detect.
+
+For this category, we'll setup the subcategories "Audit Policy Change" and "Audit Authentication Policy Change" to Success and Failure. After setting this up, events such as [Windows Event ID 4719](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4719) ( System audit policy was changed ) and [Windows Event ID 4739](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4739) ( Domain Policy was changed ).
+
+<img width="421" height="150" alt="image" src="https://github.com/user-attachments/assets/3e0f41b9-3fc3-4397-b098-97a13cea62e3" />
+
+### Privilege Use
+This category monitors the use of high-impact privileges such as [SeImpersonatePrivilege](https://learn.microsoft.com/en-us/troubleshoot/windows-server/windows-security/seimpersonateprivilege-secreateglobalprivilege), among many others, which can be used by attackers to escalate privileges or bypass security controls.
+
+For this category, we'll set the subcategory "Audit Sensitive Privilege Use" to Success and Failure. Once setup, this will trigger events such as [Windows Event ID 4673](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4673) ( A privileged service was called ) and [Windows Event ID 4739](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4674) ( An operation was attempted on a privileged object ).
+
+<img width="422" height="99" alt="image" src="https://github.com/user-attachments/assets/88a9bda6-22cc-4c5f-8479-caa2ccd72d76" />
+
+### System
+This category monitors changes that can be described as system changes with potential security implications. On this category, we'll monitor for changes to the system's security state and loading security packages/extensions and installing services.
+
+For this category, we'll setup the "Audit Security State Change" and "Audit Security System Extension" subcategories to Success and Failure. Once setup, events such as [Windows Event ID 4608](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4608) ( Windows is starting up ) and [Windows Event ID 4697](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4697) ( A service was installed on the system ).
+
+<img width="422" height="128" alt="image" src="https://github.com/user-attachments/assets/c98106c3-a781-4e46-b773-3b5e5443cb69" />
+
+### Applying the Group Policy changes
+On a powershell terminal with admin rights, run the command `gpupdate /force`. To check if the policies were applied correctly, run the command `auditpol /get /category:*`.
+
+## Toggle PowerShell Logging
