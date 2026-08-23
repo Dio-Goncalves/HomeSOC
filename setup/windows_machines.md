@@ -1,6 +1,26 @@
 # Introduction
 I've decided to include some Windows machines on this project to be able to work with windows telemetry and active directory. These machines come in the form of a Windows Server 2019, which will act as a Domain Controller, and a Windows 11 endpoint which will simulate a simple user endpoint.
 
+# Contents
+1. [Setting up the Windows Server VM](#Setting-up-the-Windows-Server-VM)
+   - [Lab Diagram](<architecture/Lab Diagram.png>)
+   - [Network Topology](<architecture/Network Topology.png>)
+2. attacks & detection
+   - Simulation 1
+3. [setup](setup)
+   - [pfSense](setup/pfsense/pfsense.md)
+     - [Suricata](setup/pfsense/suricata/suricata.md)
+   - Linux Server
+     - Splunk
+   - [Windows Machines](setup/windows_machines.md)
+   - Debian Endpoint
+   - Attacker Machine (Kali VM)
+4. [splunk](splunk)
+   - [dashboards](splunk/dashboards)
+     - [authentication](splunk/dashboards/authentication.md)
+     - [endpoint activity](splunk/dashboards/endpoint_activity.md)
+     - [IDS](splunk/dashboards/IDS.md)
+
 # Setting up the Windows Server VM
 Before booting the machine, in virtualbox, this machine will only be working with one network adapter, connected to our internal network.
 
