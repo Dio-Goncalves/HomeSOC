@@ -17,7 +17,9 @@ I've decided to include some Windows machines on this project to be able to work
    - [Toggle PowerShell Logging](#Toggle-PowerShell-Logging)
    - [Installing Splunk Universal Forwarder](#Installing-Splunk-Universal-Forwarder)
    - [Setting up Sysmon](#Setting-up-Sysmon)
-2. [Setting up the Windows 11 endpoint VM]
+2. [Setting up the Windows 11 endpoint VM](#Setting-up-the-Windows-11-endpoint-VM)
+   - [Include the machine on the AD domain](#Include-the-machine-on-the-AD-domain)
+   - [Network connection setup](#Network-connection-setup)
 
 # Setting up the Windows Server VM
 Before booting the machine, in virtualbox, this machine will only be working with one network adapter, connected to our internal network.
@@ -229,5 +231,40 @@ Next, you can head to Splunk and check for these logs with the command `index=sy
 You can also generate a bunch of [Sysmon Event ID 1](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=90001) logs by opening a powershell terminal and executing commands like `notepad`, `whoami`, `ipconfig` or a simple `ping 8.8.8.8`.
 
 <img width="1889" height="876" alt="Pasted image 20260515164052" src="https://github.com/user-attachments/assets/db5725cd-98a1-4593-b093-251e5859540d" />
+
+[Back to top](#Contents)
+
+# Setting up the Windows 11 endpoint VM
+Considering that most of the setup for this machine will be the same as the Windows Server VM, given that they are both Windows machines, this section will be more streamlined than the previous one, to avoid repetition. Please refer to the previous section in case something isn't clear enough, I'll also make references to the previous section.
+
+As mentioned for the Windows Server VM, you can start by renaming the machine with the command `Rename-Computer -NewName "yourname" -Restart` and also, the internet adapter with the command `Rename-NetAdapter -Name "oldname" -NewName "newname"
+
+<img width="1005" height="227" alt="Pasted image 20260517180221" src="https://github.com/user-attachments/assets/823161de-a27f-4d39-b6ac-eb5410441a6a" />
+
+[Back to top](#Contents)
+
+## Include the machine on the AD domain
+Before proceeding, we have to include this machine on the AD domain where our DC resides. Search for "View Advanced System Settings", click on it, then head to "Computer Name", click "Change..." and on the "Member of Domain:" section, write the name of DC's domain and press OK.
+
+<img width="885" height="811" alt="image" src="https://github.com/user-attachments/assets/34b4cfab-e8ca-4f88-93a4-c6b3b6f93190" />
+
+Next, restart the machine and login as a user that is inside that domain, with the domain name before the username as in `domainname/username` in the login panel.
+
+From the DC machine, you should be able to see your newly added Windows 11 machine.
+
+<img width="756" height="532" alt="Pasted image 20260517183030" src="https://github.com/user-attachments/assets/8767c10c-4865-4c07-a8b0-26ca97559d1f" />
+
+[Back to top](#Contents)
+
+## Network connection setup
+Since we don't have access to the "Server Manager" app from this machine, we'll do the setup from the command line. 
+
+To setup the machine's IP address, considering that you want to setup your machine with the IP address of 10.10.20.20 for the interface "LABNET" run `New-NetIPAddress -InterfaceAlias "LABNET" -IPAddress 10.10.20.20 -PrefixLength 24`.
+
+Then, to setup the DNS server, we'll want to refer to our DC for this. Considering that our DC has the IP of 10.10.20.10, run the command `Set-DnsClientServerAddress -InterfaceAlias "LABNET" -ServerAddresses 10.10.20.10`. Before doing this its a good idea to try and ping the DC machine to see if the machines can see each other and, in case they don't see each other, troubleshoot and solve it before proceeding.
+
+Next, run the command `nslookup domain.local` and you should see the DC's IP address on the "Address" field. For the example below, the DC's IP was 10.10.10.10, at the time.
+
+<img width="466" height="236" alt="Pasted image 20260517180944" src="https://github.com/user-attachments/assets/f0b3f3b9-5703-4a29-bf0d-c6a27262e040" />
 
 [Back to top](#Contents)
