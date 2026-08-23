@@ -3,23 +3,21 @@ I've decided to include some Windows machines on this project to be able to work
 
 # Contents
 1. [Setting up the Windows Server VM](#Setting-up-the-Windows-Server-VM)
-   - [Lab Diagram](<architecture/Lab Diagram.png>)
-   - [Network Topology](<architecture/Network Topology.png>)
-2. attacks & detection
-   - Simulation 1
-3. [setup](setup)
-   - [pfSense](setup/pfsense/pfsense.md)
-     - [Suricata](setup/pfsense/suricata/suricata.md)
-   - Linux Server
-     - Splunk
-   - [Windows Machines](setup/windows_machines.md)
-   - Debian Endpoint
-   - Attacker Machine (Kali VM)
-4. [splunk](splunk)
-   - [dashboards](splunk/dashboards)
-     - [authentication](splunk/dashboards/authentication.md)
-     - [endpoint activity](splunk/dashboards/endpoint_activity.md)
-     - [IDS](splunk/dashboards/IDS.md)
+   - [Setting up the network connection](#Setting-up-the-network-connection)
+   - [Adding a new user to the Domain Admin group](#Adding-a-new-user-to-the-Domain-Admin-group)
+   - [Editing Group Policies](#Editing-Group-Policies)
+     - [Domain Controller Credential Validation](#Domain-Controller-Credential-Validation)
+     - [Account Management](#Account-Management)
+     - [Logon/Logoff](#Logon/Logoff)
+     - [DS Access](#DS-Access)
+     - [Policy Change](#Policy-Change)
+     - [Privilege Use](#Privilege-Use)
+     - [System](#System)
+     - [Applying the Group Policy changes](#Applying-the-Group-Policy-changes)
+   - [Toggle PowerShell Logging](#Toggle-PowerShell-Logging)
+   - [Installing Splunk Universal Forwarder](#Installing-Splunk-Universal-Forwarder)
+   - [Setting up Sysmon](#Setting-up-Sysmon)
+2. [Setting up the Windows 11 endpoint VM]
 
 # Setting up the Windows Server VM
 Before booting the machine, in virtualbox, this machine will only be working with one network adapter, connected to our internal network.
