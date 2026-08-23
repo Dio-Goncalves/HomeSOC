@@ -29,6 +29,8 @@ Before booting the machine, in virtualbox, this machine will only be working wit
 
 <img width="388" height="49" alt="image" src="https://github.com/user-attachments/assets/581b4312-3213-4e43-a5c5-b2c2108f9cac" />
 
+Since I was rather tight on RAM on my host machine, I've ran this VM on 3072 MB of memory and 2 processors. For storage I've kept 60 GB.
+
 After going through the installation, its a good idea to update the OS with the latest updates before proceeding.
 
 To change the name of the machine, the following powershell command can be used:
@@ -243,6 +245,8 @@ Considering that most of the setup for this machine will be the same as the Wind
 Just like the Windows Server VM, before booting the machine, in virtualbox, this machine will only be working with one network adapter, connected to our internal network.
 
 <img width="388" height="49" alt="image" src="https://github.com/user-attachments/assets/581b4312-3213-4e43-a5c5-b2c2108f9cac" />
+
+Since I was rather tight on RAM on my host machine, I've ran this VM on 3072 MB of memory and 2 processors. For storage I've kept 60 GB.
 
 As mentioned for the Windows Server VM, you can start by renaming the machine with the command `Rename-Computer -NewName "yourname" -Restart` and also, the internet adapter with the command `Rename-NetAdapter -Name "oldname" -NewName "newname"
 
