@@ -270,9 +270,9 @@ From the DC machine, you should be able to see your newly added Windows 11 machi
 ## Network connection setup
 Since we don't have access to the "Server Manager" app from this machine, we'll do the setup from the command line. 
 
-To setup the machine's IP address, considering that you want to setup your machine with the IP address of 10.10.20.20 for the interface "LABNET" run `New-NetIPAddress -InterfaceAlias "LABNET" -IPAddress 10.10.20.20 -PrefixLength 24`.
+To setup the machine's IP address, considering that you want to setup your machine with the IP address of 10.20.20.15 for the interface "LABNET" run `New-NetIPAddress -InterfaceAlias "LABNET" -IPAddress 10.20.20.15 -PrefixLength 24`.
 
-Then, to setup the DNS server, we'll want to refer to our DC for this. Considering that our DC has the IP of 10.10.20.10, run the command `Set-DnsClientServerAddress -InterfaceAlias "LABNET" -ServerAddresses 10.10.20.10`. Before doing this its a good idea to try and ping the DC machine to see if the machines can see each other and, in case they don't see each other, troubleshoot and solve it before proceeding.
+Then, to setup the DNS server, we'll want to refer to our DC for this. Considering that our DC has the IP of 10.20.20.10, like we've seen previously, run the command `Set-DnsClientServerAddress -InterfaceAlias "LABNET" -ServerAddresses 10.20.20.10`. Before doing this its a good idea to try and ping the DC machine to see if the machines can see each other and, in case they don't see each other, troubleshoot and solve it before proceeding.
 
 Next, run the command `nslookup domain.local` and you should see the DC's IP address on the "Address" field. For the example below, the DC's IP was 10.10.10.10, at the time.
 
