@@ -6,14 +6,36 @@ This dashboard is made of two different tabs:
 
 For reference on the Splunk commands, please refer to this [page](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/abstract). For reference on Windows Event IDs, please refer to this [page](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/).
 
+## Contents
+1. [Windows tab](#Windows-tab)
+   - [Overview](#Windows-Overview)
+   - [In-Depth Analysis](#Windows-In-Depth-Analysis)
+     - [Suspicious Process Execution](#Suspicious-Process-Execution)
+     - [Scheduled Task Creation](#Scheduled-Task-Creation)
+     - [Powershell Activity](#Powershell-Activity)
+     - [Suspicious Powershell Commands](#Suspicious-Powershell-Commands)
+     - [Parent and Child Process Relationships](#Parent-and-Child-Process-Relationships)
+     - [Registry Persistence](#Registry-Persistence)
+2. [Linux tab](#Linux-tab)
+   - [Overview](#Linux-Overview)
+   - [In-Depth Analysis](#Linux-In-Depth-Analysis)
+     - [Sensitive Command Execution](#Sensitive-Command-Execution)
+     - [Sudo Activity](#Sudo-Activity)
+     - [Successful SSH Logins](#Successful-SSH-Logins)
+     - [Failed SSH Logins](#Failed-SSH-Logins)
+     - [Service Monitoring and Changes](#Service-Monitoring-and-Changes)
+     - [Cron Changes](#Cron-Changes)
+
 ## Windows tab
-### Overview
+### Windows Overview
 <img width="1872" height="614" alt="Pasted image 20260708095906" src="https://github.com/user-attachments/assets/5854ae3e-d64b-4093-9592-7c04f8971e3f" />
 <img width="1863" height="573" alt="Pasted image 20260708095928" src="https://github.com/user-attachments/assets/5e3e11b4-dd6c-4dc3-9a0d-a437cc2bf9be" />
 <img width="1858" height="469" alt="Pasted image 20260708095954" src="https://github.com/user-attachments/assets/348e036c-5c6c-449d-ac52-d10a332f2a3a" />
 <img width="1854" height="268" alt="Pasted image 20260708100005" src="https://github.com/user-attachments/assets/23b660cf-cf05-40b9-a9ba-94ec3ccea25f" />
 
-### In-Depth Analysis
+[Back to top](#Contents)
+
+### Windows In-Depth Analysis
 #### Suspicious Process Execution
 The first table of the Windows dashboard, showcases the execution of suspicious processes. By keeping an eye on commonly used utilities in attacks, associated command lines and their parent images, it is possible to quickly detect any anomaly.
 
@@ -45,6 +67,7 @@ OR like(Process,"%psexec%")
  - Then, using the `table` command, a table was built with the time, host, User, Image, CommandLine and ParentImage columns;
  - Finally the table was sorted by time, showing the most recent events first.
 
+[Back to top](#Contents)
 
 #### Scheduled Task Creation
 A common way for attackers to gain persistence is via scheduled tasks. These can fly under the radar rather effectively and are a good way of getting a backdoor to the victim's machine. This table monitors for the creation of scheduled tasks, showing the related images, command line, target filename and, of course, timestamp and host.
@@ -61,6 +84,7 @@ A common way for attackers to gain persistence is via scheduled tasks. These can
  - Then, using the `table` command, a table with the time, host Image, CommandLine and TargetFilename columns is built;
  - Finally, the table was sorted by time, showing the most recent events first.
 
+[Back to top](#Contents)
 
 #### Powershell Activity
 The following table monitors for powershell activity. By displaying the related images to the powershell process, together with the user and host, it can be helpful in evaluating if the powershell process is malicious. Looking back, even though this table can be useful, its rendered rather useless by the table that will be exposed next. In order to reduce visual clutter, it wouldn't be a bad idea to see this table's presence as optional.
@@ -79,6 +103,7 @@ index=sysmon EventCode=1 Image="*powershell.exe*"
  - Then, the last value of the User field was parsed and stored under the variable "User";
  - Finally the table was built with the time, User, Image, CommandLine and ParentImage columns.
 
+[Back to top](#Contents)
 
 #### Suspicious Powershell Commands
 This table gives a different perspective on powershell activity when compared to the last table. This table actually shows the executed commands. As an improvement, it could be useful to implement the `User` field on the table.
@@ -103,6 +128,7 @@ OR Message="*FromBase64String*"
  - Then, the `Message` field is filtered for the most common powershell utilities used in attacks;
  - Finally a table is built with the time, ComputerName and Message columns, and sorted by time to show the most recent events first.
 
+[Back to top](#Contents)
 
 #### Parent and Child Process Relationships
 Similar to the Suspicious Process Execution table, this table monitors for the relationships between parent and child processes, monitoring the parent images that are usually common vectors of attack. It also displays executed commands. The difference in this table is that it focuses on the the parent image, rather than the child image like the first one does.
@@ -126,6 +152,7 @@ OR ParentImage="*\\cmd.exe"
  - Then, the final value of the `User` field is parsed and stored on the variable "User";
  - Finally, using the `table` command, a table with the time, host, User, ParentImage, Image and CommandLine columns is built. The table is sorted by time to show the most recent events first.
 
+[Back to top](#Contents)
 
 #### Registry Persistence
 This table monitors registry key activity, which is a very common way of gaining persistence on a machine. With this a program can configure itself to run automatically when Windows or a user starts.
@@ -144,15 +171,18 @@ index=* source="WinEventLog:Microsoft-Windows-Sysmon/Operational" (EventCode=12 
  - Using the `table` command, a table was built with the time, host, User, TargetObject, Details and Image columns. In this case, the `TargetObject` field refers to the registry value that was affected, the `Details` field to the data involved in the operation and the `Image` field to the process responsible for the registry activity;
  - Finally the table was sorted by time to show the most recent events first.
 
+[Back to top](#Contents)
 
 ## Linux tab
-### Overview
+### Linux Overview
 <img width="1869" height="429" alt="Pasted image 20260708100358" src="https://github.com/user-attachments/assets/eb3798ce-7a37-4571-94c0-7fe5dd888f02" />
 <img width="1858" height="384" alt="Pasted image 20260708100409" src="https://github.com/user-attachments/assets/8df133b3-0610-475d-b6b3-7908d6ae2f7a" />
 <img width="1855" height="386" alt="Pasted image 20260708100424" src="https://github.com/user-attachments/assets/5e40d4a4-30d6-4ab7-9391-11292c37cb3b" />
 <img width="1854" height="264" alt="Pasted image 20260708100435" src="https://github.com/user-attachments/assets/2581e9c6-e006-410a-a770-a029cf126d24" />
 
-### In-Depth Analysis
+[Back to top](#Contents)
+
+### Linux In-Depth Analysis
 #### Sensitive Command Execution
 This table focuses on monitoring the execution of sensitive commands, commonly used with malicious intents.
 
@@ -182,6 +212,7 @@ index=* source="/var/log/auth.log" "sudo:"
  - The next line, using the `table` command, builds a table with the time, host, user, current working directory (pwd) and command columns;
  - Finally the table is sorted by time to show the most recent events first.
 
+[Back to top](#Contents)
 
 #### Sudo Activity
 This table monitors for all sudo activity. Any command that that is executed using sudo, show appear in this table. Given the power that the sudo has, it is imperative to monitor its usage since it can be a major problem in case of compromise. Looking back, this table effectively renders the previous one obsolete and one could consider removing the previous table to streamline the dashboard and reduce visual clutter.
@@ -201,6 +232,7 @@ index=* source="/var/log/auth.log" "sudo:"
  - Using the `table` command, the fourth line build a table with the time, host user, current working directory and command columns;
  - Finally, the table is sorted by time to show the most recent events first.
 
+[Back to top](#Contents)
 
 #### Successful SSH Logins
 This table is designed to monitor successful SSH login events. Conceptually, this table should be rather noisy with benign traffic, considering that it is normal to have successful login attempts. It would be wise to think about another way to implement this table or simply remove it from the dashboard. It is also debatable that this table should be in the authentication dashboard instead of this one, considering that we are talking about SSH.
@@ -221,6 +253,7 @@ index=* source="/vat/log/auth.log" sshd "Accepted password"
  - Next, using the `table` command, a table with the time, host, User and SourceIP columns is built;
  - Finally, the table is sorted by time to show the most recent events first.
 
+[Back to top](#Contents)
 
 #### Failed SSH Logins
 This table is the opposite of the previous one, monitoring Failed SSH login events. Very important to monitor for brute-force attacks, since SSH is usually a common vector of this type of attack. Just like the previous table, it should be considered to move this table to the authentication dashboard, considering we are dealing with SSH.
@@ -240,6 +273,8 @@ index=* source="/var/log/auth.log" sshd "Failed password"
  - The third line parses the source IP address out of the raw log and stores it under the "SourceIP" variable;
  - Next, using the `table` command, a table with the time, host, User and SourceIP columns is built;
  - Finally, the table is sorted by time to show the most recent events first.
+
+[Back to top](#Contents)
 
 #### Service Monitoring and Changes
 This table monitors for service monitoring and changes, using the `systemctl` command. This can be a very useful command for attackers to monitor and weaken the victim's machine.
@@ -264,6 +299,7 @@ index=linux source="/var/log/auth.log"
  - Then, a table was built with the time, host, Invoker, TargetUser and Command columns. Once again, the TargetUser column could be kept out of this table;
  - Finally, the table was sorted by time to show the most recent events first.
 
+[Back to top](#Contents)
 
 #### Cron Changes
 This table monitors cron changes. This is a very common vector used by attackers to gain persistence on machines, so its imperative to monitor this kind of activity.
@@ -281,3 +317,5 @@ index=linux source="/var/log/syslog" crontab
  - Next, using the `rex` command, the username and action are parsed out of the raw logs and stored under the variables "User" and "Action", respectively;
  - Then, using the `table` command, a table with the time, host, User and Action is built;
  - Finally, the table is sorted by time to show the most recent events first.
+
+[Back to top](#Contents)
