@@ -4,9 +4,14 @@ In order to have some Linux telemetry and to host Splunk, I've decided to includ
 # Contents
 1. [Setting up the VM](#Setting-up-the-Windows-Server-VM)
    - [Setting up the network connection](#Setting-up-the-network-connection)
+   - [Setting up auditd rules](#Setting-up-auditd-rules)
 2. [Setting up Splunk](#Setting-up-Splunk)
+   - [Enable Splunk to boot on startup](#Enable-Splunk-to-boot-on-startup)
+   - [Enable SSL connection with Splunk for HTTPS connection](#Enable-SSL-connection-with-Splunk-for-HTTPS-connection)
    - [Access Splunk via browser](#Access-Splunk-via-browser)
    - [Activating Splunk Receiving](#Activating-Splunk-Receiving)
+   - [Setting up a data input for syslog logs from pfSense](#Setting-up-a-data-input-for-syslog-logs-from-pfSense)
+   - [Index creation in Splunk](#Index-creation-in-Splunk)
 
 # Setting up the VM
 Before booting up the VM, on VirtualBox, setup the network interface to the Internal Network. Also, have around 4096 MB of memory allocated to the machine and 2 processors. For storage, I'd advise around 80 GB just to be safe.
@@ -18,6 +23,8 @@ First things first, change the root password of the VM. With the command `sudo p
 Next, it is also not a good practice to use the `root` user for everything. Create a user with sudo rights to setup and manage the machine. Simply run the command `adduser youruser` (replace youruser) with the username you wish. Then, give the administrative privileges with the command `usermod -aG sudo youruser`. The `-a` flag simply appends the group rather than replacing the user's existing groups, and the `-G` flag adds the user to the sudo group. Then, to change to your new user, simply run `su youruser`, insert the password and that's it. Once you're in the new user, to check that you have the administrative rights, run the command `sudo whoami` and you should get "root" as output.
 
 To check the machine name, run the `hostname` command. In case you want to change it, simply run the command `sudo hostnamectl set-hostname newname` ( replace "newname" with the name you want ).
+
+[Back to top](#Contents)
 
 ## Setting up the network connection
 Before doing anything else on the machine, we have to setup the network interface, in order to have an internet connection. Run the `ip a` command to see the name of the network interface ( enp0s3, enp0s8, ... ).
@@ -45,6 +52,23 @@ network:
 
 Save and quit and run the command `sudo netplan apply`.
 
+[Back to top](#Contents)
+
+## Setting up auditd rules
+Even though I didn't have enough time to play around with them, I tried to create some auditd rules. These auditd rules monitor modifications and attribute changes to Linux's local account and group files: `/etc/passwd`, `/etc/group`, `/etc/shadow` and `/etc/gshadow`.
+
+To create these rules, go to `/etc/audit/rules.d` and create a file called `user-management.rules`.
+
+<img width="821" height="127" alt="Pasted image 20260613124207" src="https://github.com/user-attachments/assets/0314cb19-9a62-49eb-af96-404ca9163149" />
+
+The `-p wa` flag specifies which type of access auditd should monitor, being `w` write and `a` attribute change. The `a` can catch things such as changes to file metadata/attributes, not just changes to the file's contents. More info on auditd rules [here](https://linux.die.net/man/7/audit.rules).
+
+Next, run the command `sudo augenrules --load` to load the rules. Next, you can check if there rules were properly loaded with the command `sudo auditctl -l`.
+
+<img width="427" height="86" alt="image" src="https://github.com/user-attachments/assets/21a9815f-7f4a-4d6f-9abc-8f6246ecce45" />
+
+[Back to top](#Contents)
+
 # Setting up Splunk
 Download Splunk Enterprise from the [official website](https://www.splunk.com/en_us/download/splunk-enterprise.html). Create an account of you don't have one and, once you're in, pick the installer with the .tgz extension and copy the wget link.
 
@@ -56,8 +80,12 @@ Decompress the file with `sudo tar -xzf splunk-*.tgz -C /opt` and once decompres
 
 Once inside the /bin directory, simply run the `./splunk start --accept-license` command and you should be prompted with the initial setup. Beware here you'll be prompted to choose a port to communicate with Splunk, this is what you'll use to access Splunk via browser.
 
+[Back to top](#Contents)
+
 ## Enable Splunk to boot on startup
 To enable Splunk to automatically boot every time you start the Linux machine, run the command `sudo /opt/splunk/bin/splunk enable boot-start -user youruser`.
+
+[Back to top](#Contents)
 
 ## Enable SSL connection with Splunk for HTTPS connection
 To enable a safe connection with Splunk via browser, run the command `sudo nano /opt/splunk/etc/system/local/web.conf`.
@@ -68,8 +96,12 @@ Add the settings in the picture below
 
 Restart Splunk with `sudo /opt/splunk/bin/splunk restart`.
 
+[Back to top](#Contents)
+
 ## Access Splunk via browser
 By now you should be able to access Splunk via browser. To do this it is best to do it from one of the Windows VMs. Depending on how you setup Splunk, you should be able to access it by using it's IP address and the port you've setup on the installation in [Setting up Splunk](#Setting-up-Splunk). Assuming that our Linux machine has an IP address of 10.20.20.5 and we've chosen port 8008 to communicate with Splunk, you should be able to access Splunk with "https://10.20.20.5:8000".
+
+[Back to top](#Contents)
 
 ## Activating Splunk Receiving
 Once logged into Splunk via browser, it is possible to see a dashboard with a lot of options. Before touching anything, we need to receive logs on Splunk and to achieve this, we need to setup Splunk Receiving. Go to "Settings" -> "Forward and Receiving" -> "Configure Receiving". Once there you can pick any port you want. On the picture below, I've chosen port 9997, as suggested.
@@ -80,3 +112,24 @@ Once saved, you can go back to the Linux machine and verify if you have that por
 
 <img width="807" height="40" alt="Pasted image 20260515122827" src="https://github.com/user-attachments/assets/2ff1bb19-bc46-4492-a67a-094c78570dbf" />
 
+[Back to top](#Contents)
+
+## Setting up a data input for syslog logs from pfSense
+Port 5514 was setup as a UDP data input to allow pfSense to forward syslog messages directly to Splunk. UDP was selected for syslog because it has low protocol overhead and is traditionally used for syslog transport. Since there's relatively low network distance between these machines, there's little risk of packet loss.
+
+To do this, in Splunk, go to "Settings" -> "Data Input". On the picture below I had setup "Only accept connection from: 10.10.10.1". Here, considering that this Linux machine has an IP of 10.20.20.5 and we've set up the remote logging on pfSense on the 10.20.20.0/24 network, we should configure this field with the 10.20.20.1 IP instead of 10.10.10.1.
+
+<img width="628" height="339" alt="Pasted image 20260518155929" src="https://github.com/user-attachments/assets/5815fcce-4b4e-4ae8-b5e9-c453927dd29c" />
+
+Then, click next and setup as follows. It is not a bad idea to create an Index to store these logs.
+
+<img width="907" height="734" alt="Pasted image 20260518160207" src="https://github.com/user-attachments/assets/3885a6ea-c0c5-4964-8542-b711291abea9" />
+
+[Back to top](#Contents)
+
+## Index creation in Splunk
+Indexes can be used to organize your logs in Splunk, allowing you to separate them as you wish. To do this, simply go to "Settings" -> "Indexes" and you should be on the "Indexes" menu. To create a new index simply click on the button "New Index", in the top-left.
+
+<img width="1911" height="690" alt="Pasted image 20260523153030" src="https://github.com/user-attachments/assets/1529bbe7-67f2-4224-bd94-3aa21fd38fd7" />
+
+[Back to top](#Contents)
