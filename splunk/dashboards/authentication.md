@@ -5,6 +5,46 @@ This dashboard is made of three different tabs:
   - The [Windows tab](#Windows-tab) which will focus on the windows machines;
   - The [Linux tab](#Linux-tab) which will focus on the linux machines.
 
+#Contents
+1. [General tab](#General-tab)
+   - [Overview](#Overview)
+   - [In-Depth Analysis](#In-Depth-Analysis)
+     - [Total Failed Login Attempts Timechart](#Total-Failed-Login-Attempts-Timechart)
+     - [Total Failed Login Attempts Count](#Total-Failed-Login-Attempts-Count)
+     - [Failed Login attempts by User and Host](#Failed-Login-attempts-by-User-and-Host)
+     - [Failed SSH Authentication](#Failed-SSH-Authentication)
+     - [User Creation](#User-Creation)
+     - [Deleted Users](#Deleted-Users)
+     - [Password Changes](#Password-Changes)
+2. [Windows tab](#Windows-tab)
+   - [Windows Overview](#Windows-Overview)
+   - [Windows In-Depth Analysis](#Windows-In-Depth-Analysis)
+     - [Failed Logons Over Time Timechart](#Failed-Logons-Over-Time-Timechart)
+     - [Total Failed Logons Count](#Total-Failed-Logons-Count)
+     - [Total Failed Logons by User and Host](#Total-Failed-Logons-by-User-and-Host)
+     - [User Creation](#User-Creation)
+     - [Deleted Users](#Deleted-Users)
+     - [Password Changes](#Password-Changes)
+     - [Kerberoasting Detection](#Kerberoasting-Detection)
+     - [Group Membership Changes](#Group-Membership-Changes)
+     - [Kerberos / Ticket Activity](#Kerberos-/-Ticket-Activity)
+     - [Failed Kerberos](#Failed-Kerberos)
+     - [TGT requests](#TGT-requests)
+     - [Mimikatz Execution](#Mimikatz-Execution)
+3. [Linux tab](#Linux-tab)
+   - [Linux Overview](#Linux-Overview)
+   - [Linux In-Depth Analysis](#Linux-In-Depth-Analysis)
+     - [Failed Logons Over Time](#Failed-Logons-Over-Time)
+     - [Total Failed Logons](#Total-Failed-Logons)
+     - [Failed Logons by User and Host](#Failed-Logons-by-User-and-Host)
+     - [Failed SSH Logons](#Failed-SSH-Logons)
+     - [Locked and Unlocked User Accounts](#Locked-and-Unlocked-User-Accounts)
+     - [User Creation](#User-Creation)
+     - [Deleted Users](#Deleted-Users)
+     - [Password Changes](#Password-Changes)
+     - [Sudo Activity](#Sudo-Activity)
+     - [Sudo Administrative Activity](#Sudo-Administrative-Activity)
+
 **Observations:** 
  - The time filter for this dashboard is set to match the attack ran on the Simulation 1 page;
  - Also, due to the limited available time, the usernames present in the screenshots are not redacted. I'm aware that its a bad practice but considering that the lab is not longer live, its rather irrelevant. It's perfectly fine for demonstration purposes;
@@ -15,6 +55,7 @@ This dashboard is made of three different tabs:
 ### Overview
 <img width="1431" height="870" alt="image" src="https://github.com/user-attachments/assets/de93cfed-e370-4947-9618-c123ad1d3aef" />
 
+[Back to top](#Contents)
 
 ### In-Depth Analysis
 #### Total Failed Login Attempts Timechart
@@ -38,6 +79,8 @@ index=* ((EventCode=4625 OR (source="/var/log/auth.log" "authentication failure"
  - The third and fourth line of the query are mere exception rules created to filter out unwanted noise. When the query was being created, I was getting some unwanted noise from poorly parsed logs and these lines are here merely to make sure that the noise stays out. These lines are entirely situational. For this we used the [where](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/where) command which works as a boolean search filter and also the [search](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/search) command to filter out unwanted content from our starting search. In this specific case, I wanted to filter out logs that were related to a "win11-client" user which, considering that I don't have any user named like that and also that this is a hostname, it was safe to assure that it was a poorly parsed log. Then, in some instances I was getting duplicate logs from usernames with the format "domain/username" and thats where the `where` command came in to filter this unnecessary noise out;  
  - Finally, [timechart](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/timechart) command is here merely to format our data into our timechart.
 
+[Back to top](#Contents)
+
 #### Total Failed Login Attemps Count
 Next in line, is the total count of failed login attempts. Even though it essentially presents us with the same information as the previous timechart, this pairs very well with it as it gives us another perspective on the same information, that can be useful in specific situations, that's what dashboards are all about after all.  
 
@@ -53,6 +96,8 @@ index=* (EventCode=4625 OR (source="/var/log/auth.log" "authentication failure")
 ```
 **Query Analysis:**  
  - The only line that differs from the last query is the last line. Here the [stats](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/stats) command was used, together with the argument `count` to simply count the number of events that match our search query, resulting on the number obtained. The `stats` command is a very powerful statistics command that can be used in many different ways.
+
+[Back to top](#Contents)
 
 #### Failed Login attempts by User and Host
 The purpose of this chart is to present the failed login attempts in an organized manner, sorting by User, Host and Failed Login count. Its goal is to help visualize which hosts and users were more affected and have a higher probability of being subjects of something like a brute-force attack.
@@ -75,6 +120,8 @@ index=* (EventCode=4625 OR (source="/var/log/auth.log" "authentication failure")
  - Next we use the [table](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/table) command to build the table. This is a very simple, yet effective and poweful command to use. It consists on the command `table`, followed by the columns we wish to have. According to our query, we know we have the "User" field, that we obtain from the `eval` command, and then the "Hosts" and "Failed Logons" fields, that we obtain from the `stats` command. Considering this, we can simply use the `table` command, followed by these fields to make a table using these fields as columns;
  - Lastly, the `sort` command is used with the `-` argument to sort the "Failed Logons" column in descending order. Showing in the first line the User and Host with the biggest amount of failed login attempts, to quickly detect any possible problems.
 
+[Back to top](#Contents)
+
 #### Failed SSH Authentication
 The following table, is pretty much equal to the previous one, but dedicated to SSH authentication. Since this protocol is very frequently used, both for legitimate and ilegitimate purposes, it makes all the sense in the world to give it some attention.
 
@@ -92,6 +139,8 @@ index=* source="/var/log/auth.log" "Failed Password"
  - Previously, while studying the different types of logs, I realized that the pertinent logs for this were the logs in the `auth.log` file that had the expression "Failed Password", hence why the initial filter on the first line of the query;
  - On the next line we make use of the [rex](https://help.splunk.com/en/splunk-enterprise/spl-search-reference/9.2/search-commands/rex) command. This is utilized to extract fields making use of regular expressions. The `field=_raw` argument, tells splunk to search the entire text in the log. Then we start with the parsing, knowing that the log can either be "Failed password for username" or "Failed password for invalid user username" we have to create an expression capable of parsing out the username out of both of these expressions. We start by matching the word "for" on the expression and then add `(invalid user)?`, here the `()?` mean that this part of the sentence is entirely optional, but it's important to let Splunk know that it can be there. Then, the important part, we capture our username with `(?<User>\S+)` and store it in a variable named "User". The `\S+` is added to make Splunk read characters until it reaches a whitespace, thats when the username ends;
  - The next lines of the query follow the exact same logic of the previous one.
+
+[Back to top](#Contents)
 
 #### User Creation
 The following table is meant to monitor user creation. This is a popular method of obtaining persistence by attackers and usually only possible to do by using privileged users. Maintaining an eye on this, can help detect signs of persistence and also privileged account compromise.
@@ -116,6 +165,8 @@ index=* (Eventcode=4720 OR (source="/var/log/auth.log" "new user:"))
  - Then, using `eval` once again, we create a new field, "Platform", and use an `if` statement to give it a value. If we are dealign with an `EventCode=4720`, that means its a Windows Event ID 4720 log, meaning we are dealing with a Windows machine. If not, we are dealing with a Linux;
  - Like in previous queries, we make use of the `where` command, together with "isnotnull" expression, to filter out null values, this time on the "CreatedUser" field;
  - Finally, for the last 2 query lines we make use of the `table` command to create a table with the created variables, together with "time" and "host". In the last line we use the command `sort` to show the most recent events first.
+
+[Back to top](#Contents)
 
 #### Deleted Users
 The following table will monitor for deleted users across all the machines. This is very important to monitor with user tampering and avoid any data loss or control over the machines.
@@ -145,6 +196,8 @@ search index=* source="/var/log/auth.log" ("userdel" OR "deluser")
  - Once again, using the `eval` command, we tell Splunk to store the "Linux" value inside the "Platform" variable;
  - We filter out null values with the `where` command and then proceed to create a table similar to the one in the first part of the search with the same columns. It's important to have matching columns to have a consistent table;
  - Using the `sort` command, we sort the events to show the most recent ones first.
+
+[Back to top](#Contents)
 
 #### Password Changes
 The last table on this tab will monitor password changes and password resets. This is another popular method for attackers lock the victims out of their own machines.
@@ -178,6 +231,7 @@ search index=* source="/var/log/auth.log" "password changed for"
  - Equal to the first part of the search, we use the `eval` command to create the "Platform" variable, assigning it the value of "Linux" and the "Action" variable, with the "Password Changed" value. This means that if we are dealing with Linux logs, these variables will take these values automatically;
  - Finally, using the `table` command, we create a table with the same columns as the one we created on the Windows search and sort the events to show the newest ones first, by using the command `sort`.
 
+[Back to top](#Contents)
 
 ## Windows tab  
 ### Overview
@@ -187,6 +241,8 @@ search index=* source="/var/log/auth.log" "password changed for"
 <img width="1860" height="388" alt="Pasted image 20260707111218" src="https://github.com/user-attachments/assets/523ed96a-d58a-469f-8824-8d1dcbccfbaa" />
 <img width="1861" height="388" alt="Pasted image 20260707111230" src="https://github.com/user-attachments/assets/e71640a7-e15f-4449-aa1c-b5a64e761504" />
 <img width="1856" height="381" alt="Pasted image 20260707111239" src="https://github.com/user-attachments/assets/11b17bb9-d40c-43fb-9509-265d4d105212" />
+
+[Back to top](#Contents)
 
 ### In-Depth Analysis
 #### Failed Logons Over Time Timechart
@@ -203,6 +259,8 @@ index=* EventCode=4625 Failure_Reason=*Unknown user name or bad password.*
  - Analyzing the query, besides the obvious `EventCode=4625` filter, we also filter for the expression `Failure_Reason=*Unknown user name or bad password.*` to specifically filter for bad credential events and filter out any additional noise that may come out;
  - Once again we use the `timechart count` command to format the data into a timechart with the event count.
 
+[Back to top](#Contents)
+
 #### Total Failed Logons Count
 Similarly to the previous tab of the dashboard, next in line is the total count of failed login attempts presented in the form of a radical, allowing us to have another perspective on the information.
 
@@ -215,6 +273,8 @@ index=* EventCode=4625 Failure_Reason=*Unknown user name or bad password.*
 ```
 **Query Analysis:**
  - As mentioned above, the only difference to the previous query is the piped command, where we pipe the `stats count as "Total Failed Logons"` command to obtain the total amount of events with the "Total Failed Logons" label.
+
+[Back to top](#Contents)
 
 #### Failed Logons by User and Host
 The next table nicely displays the amount of failed login attempts, separating by user and host. This allows us to evaluate specifically which user and machine is more susceptible to being attacked.
@@ -233,6 +293,7 @@ index=* EventCode=4625
 **Query Analysis:**
  - This query follows exactly the same logic of the one found in [Failed Login attempts by User and Host](#Failed-Login-attempts-by-User-and-Host). In order to avoid repeating myself, please refer to this one.
 
+[Back to top](#Contents)
 
 #### User Creation
 The next table displays the events regarding user creation by host and user, sorted by newer events first. In this specific case, it is possible to see what seem to be duplicate events but they are different events as seen in the timestamps. I merely proceeded to create and delete users to generate telemetry and test everything.
@@ -254,6 +315,7 @@ index=* EventCode=4720
  - Then, we make use of the `table` command to build a table with the time, host and "New User" columns;
  - Finally, in the last line, we use the `sort` command to sort the events by newest first.
 
+[Back to top](#Contents)
 
 #### Deleted Users
 The next table displays the events regarding deleted users, in a similar manner to our previous table.
@@ -270,6 +332,8 @@ index=* EventCode=4726
 ```
 **Query Analysis:**
  - As previously mentioned, this query follows the exact same logic as the previous one. The only difference being on the Windows Event ID used and the new variable name.
+
+[Back to top](#Contents)
 
 #### Password Changes
 The following table will monitor changes related to user passwords, being regular password changes or password resets.
@@ -293,6 +357,8 @@ index=* (EventCode=4723 OR EventCode=4724)
  - Then, we make use of the `table` command to build a table with the time, host, User and Action columns;
  - Finally we sort the events by newest first, using `sort`.
 
+[Back to top](#Contents)
+
 #### Kerberoasting Detection
 For this table, I decided to monitor for kerberos service ticket requests and password hash access, to try and detect kerberoasting attempts. _This table in particular should be subject to further review as the result is very noisy, since there are a LOT of service ticket requests happening all the time, making this table borderline useless._
 
@@ -312,6 +378,8 @@ index=* (EventCode=4782 OR EventCode=4769)
  - Once again using `eval`, a new variable "Action" was created. In a similar fashion to the previous query, we used the `case` command to define a case for each Event ID, changing the value stored in "Action" depending on the Event ID;
  - Then, using the `table` command, a table was created with the time, host, User and Action columns;
  - The last line sorts the events by newest first, using the `sort` command.
+
+[Back to top](#Contents)
 
 #### Group Membership Changes
 This table, as the name suggests, monitors group membership changes. This can be an effective way of achieving privilege escalation and obtaining persistence. To do this, we'll monitor:  
@@ -337,6 +405,7 @@ EventCode=4756,"Universal Group"
  - The last line is a simple use of the `table` command to build a table with the time, host, Account_Name, Group_Name and Group Type columns;
  - This query has a clear symptom of the time restraints that this project had, as it could use a filter on the `Group_Name` field to remove unnecessary noise. Maybe filter it to only monitor critical groups like the "Administrators" group.
 
+[Back to top](#Contents)
 
 #### Kerberos / Ticket Activity
 This table was meant to monitor general Kerberos ticket activity. I was looking for ways to monitor kerberos activity in general, but looking back it needed further filtering and tuning, since the end result is still too noisy, generating multiple events per minute and giving no clear insight. To build this table we monitored the following:
@@ -374,6 +443,8 @@ Ticket_Encryption_Type="0x18","RC4-HMAC-EXP",
  - The same logic is applied when creating the "Encryption" variable. This variable will be useful to visually display the encryption type used in the kerberos activity. To filter unnecessary noise, it would be useful to further filter this field to only show events that use RC4 encryption, as its currently deprecated and presents a major risk for kerberoasting;
  - Finally, we built a table with time, host User, Service_Name, Encryption and Activity columns.
 
+[Back to top](#Contents)
+
 #### Failed Kerberos
 Even though we've already filtered for the the events in this table, in the previous table, I've decided to create a separate one decicated to Kerberos Authentication Failures. This table will monitor the previously mentioned [Windows Event ID 4771](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4771) and [Windows Event ID 4776](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4776).
 
@@ -395,6 +466,7 @@ EventCode=4776,"NTLM Authentication Failure"
  - Once again using the `eval` command, we create the "Activity" variable. Together with the `case` command, we create a case for each possible ID, populating this variable with the appropriate Windows Event ID description;
  - Finally, we create a table with the time, host, User and Activity columns and sort the table by time.
 
+[Back to top](#Contents)
 
 #### TGT Requests
 This table monitors TGT requests, by simply monitoring [Windows Event ID 4768](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4768). Even though this event is already monitored in previous tables, I felt like it was important to have a table dedicated to this. Looking back, I would probably change the way to present this information and maybe filter it further in order to make this information more actionable.
@@ -408,6 +480,7 @@ index=windows EventCode=4768
 **Query analysis:**
  - This is a very simple query, consisting on a simple filter for the Windows Event ID we are looking for, followed by the `table` command, which gives us a table with the time, Account_Name and Service_Name columns.
 
+[Back to top](#Contents)
 
 #### Mimikatz Execution
 This table will monitor for [mimikatz](https://github.com/gentilkiwi/mimikatz) usage. This is a very well known tool famous for being able to extract plaintext passwords, hashes and kerberos tickets from memory and also performing a plethora of different kerberos attacks.  
@@ -425,6 +498,7 @@ index=sysmon (Image="*mimikatz*" OR CommandLine="*mimikatz*")
  - Then, using the `eval` command, we created the "User" variable, populating it with the last value stored on the `User` field in the log;
  - Finally, we built the table with the time, host User and Image columns, giving us a table that shows when mimikatz is executed, the user that executes it and which machine it is executed in.
 
+[Back to top](#Contents)
 
 ## Linux tab
 ### Overview
@@ -434,6 +508,7 @@ index=sysmon (Image="*mimikatz*" OR CommandLine="*mimikatz*")
 <img width="1864" height="394" alt="Pasted image 20260707111630" src="https://github.com/user-attachments/assets/fd6e40f9-81e1-4ed4-affb-46c2eee48393" />
 <img width="1852" height="401" alt="Pasted image 20260707111648" src="https://github.com/user-attachments/assets/d5b67afa-317c-4c10-9e65-11c94ee99fd4" />
 
+[Back to top](#Contents)
 
 ### In-Depth Analysis
 #### Failed Logons Over Time
@@ -451,6 +526,7 @@ index=* source="/var/log/auth.log" "authentication failure"
  - The second line of the query simply filters out null values on the `user` field;
  - The last line makes use of the `timechart` command to build a timechart with the count of failed login attempts.
 
+[Back to top](#Contents)
 
 #### Total Failed Logons
 Next, we have a counter of the total failed login attempts, in the form of a radical. This presents the same information as the previous timechart, but in a different way, providing a nice visual aid by allowing to quickly detect an unusually high number of failed login attempts.
@@ -465,6 +541,7 @@ index=* source="/var/log/auth.log" "authentication failure"
  - The first line of this query follows exactly the same logic as the previous one;
  - The second line consists on using the `stats count` command to get the total amount of failed login attempts and to label the count as "Total Failed Logons".
 
+[Back to top](#Contents)
 
 #### Failed Logons by User and Host
 The following table, monitors for Failed Login Attempts by User and Host. This allows for quick detection of a potential brute force attack and to quickly find the victim username and machine.
@@ -482,6 +559,8 @@ index=* source="/var/log/auth.log" "authentication failure"
  - The second line makes use of the `stats count` command to count the total amount of failed login attempts, and separate them by Host and User;
  - The third line of the query is a simple usage of the `table` command to build a table with the user, Host and "Failed Logons" columns;
  - Finally, we sort the "Failed Logons" column in descending order, so that the user and machine with the most incidences comes first on the table.
+
+[Back to top](#Contents)
 
 #### Failed SSH Logons
 This table, follows the same logic as the previous table but only monitors failed login attempts via SSH. This is a very common vector for brute force attacks so its a good idea to remain vigilant on this port.
@@ -502,6 +581,7 @@ index=* source="/var/log/auth.log" "Failed Password"
  - The fourth line makes use of the `table` command to build a simple table with the User, Host and Attempts columns;
  - The last line sorts the Attempts column in descending order, so that we can see the User and Host with the highest amount of failed login attempts first.
 
+[Back to top](#Contents)
 
 #### Locked and Unlocked User Accounts
 The following table monitors for Locked and Unlocked User Accounts. This table could be useful in the event of having the users setup in a way so that when they had a certain amount of failed login attempts, they would be locked out. This table could help detect victims of brute force attacks or simply locked users with malicious intent by an attacker in a compromised user.
@@ -529,6 +609,7 @@ Action="--unlock","Account Unlocked"
  - Then, using the `table` command, a table was built with the time, host User, PWD, TargetUser, Activity and COMMAND columns;
  - Finally the table was sorted by time, to show the most recent events first.
 
+[Back to top](#Contents)
 
 #### User Creation
 The following table is meant to simply monitor user creation. This is a very popular method of gaining persistence on the victim machine, so it's important to stay vigilant on this.
@@ -547,6 +628,7 @@ index=* source="/var/log/auth.log" "new user:"
  - Then, a table was built with the time, host and CreatedUser columns;
  - Finally the table was sorted by time to show the most recent events first.
 
+[Back to top](#Contents)
 
 #### Deleted Users
 The next table was meant to monitor deleted users.
@@ -567,6 +649,7 @@ index=* source="/var/log/auth.log" "userdel"
  - Then we proceed to build the table with the time, host and DeletedUser columns;
  - Finally, we sort the table by time to show the most recent events first.
 
+[Back to top](#Contents)
 
 #### Password Changes
 The following table will monitor password changes across users. It's important to keep an eye on events like this since an attacker can gain persistence like this and lock the victim out of their own machine.
@@ -585,6 +668,7 @@ index=* source="/var/log/auth.log" "password changed for"
  - Then a table was built with the time, host and TargetUser columns;
  - Finally the table was sorted by time to show the most recent events first.
 
+[Back to top](#Contents)
 
 #### Sudo Activity
 The following table monitors for sudo activity across the linux machines. Given the power that this command has, its very important to monitor activity related to it, considering that a compromised sudo user can be a very big problem.
@@ -603,6 +687,7 @@ index=* source="/var/log/auth.log" "sudo:"
  - On the third line, we filter out the events with null values on the COMMAND field;
  - Then, the table is sorted by time to show the most recent events first.
 
+[Back to top](#Contents)
 
 #### Sudo Administrative Activity
 This table monitors sudo activity, in a similar way to the previous one. The difference is that this one is more descriptive. Looking back, the existence of these two tables is debatable, considering that they showcase the same information in a slightly different way. To reduce visual clutter, it would be wise to keep this table and delete the previous one.
@@ -637,3 +722,5 @@ like(_raw,"%COMMAND=/usr/bin/passwd%"),"Password Changed",
  - Using `where isnotnull(Activity)`, any logs with null values on the "Activity" variable are filtered out;
  - Then, a table was built with the time, host, USER, TargetUser, Activity and COMMAND columns;
  - Finally, the table was sorted by time to show the most recent events first.
+
+[Back to top](#Contents)
