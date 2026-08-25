@@ -5,7 +5,7 @@ This dashboard is made of three different tabs:
   - The [Windows tab](#Windows-tab) which will focus on the windows machines;
   - The [Linux tab](#Linux-tab) which will focus on the linux machines.
 
-#Contents
+# Contents
 1. [General tab](#General-tab)
    - [Overview](#Overview)
    - [In-Depth Analysis](#In-Depth-Analysis)
