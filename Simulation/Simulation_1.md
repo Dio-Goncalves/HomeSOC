@@ -5,7 +5,7 @@ The attack will consist on your typical network scans, brute-forcing users, late
 
 The purpose of this isn't to simulate a realistic black box attack environment, as I'll use known credentials in the form of dictionaries and have intentionally opened ports on the machines to access them. This attack is to merely generate noise for future analysis on Splunk.
 
-Two external laptops will be added for this attack. One running native Debian OS, which will be the initial attack target and the second one will be running a Kali VM which will be used to attack. These two machines will be operating on a different network together. Check the Lab Diagram in [architecture](architecture) for reference.
+Two external laptops will be added for this attack. One running native Debian OS, which will be the initial attack target and the second one will be running a Kali VM which will be used to attack. These two machines will be operating on a different network together. Check the [Lab Diagram](https://github.com/Dio-Goncalves/HomeSOC/blob/main/architecture/Lab%20Diagram.png) for reference.
 
 # Contents
 1. [Attack](#Attack)
