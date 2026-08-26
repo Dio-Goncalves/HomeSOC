@@ -27,16 +27,20 @@ The purpose of this isn't to simulate a realistic black box attack environment, 
 
 # Attack
 ## Network Reconnaissance
-### Local Network Discovery - [T1018](https://attack.mitre.org/techniques/T1018/)
+### Local Network Discovery
 So, from the kali machine, we start by performing an ARP scan. "ARP" means "Address Resolution Protocol" and it is responsible for mapping IP addresses to MAC addresses within a Local Area Network. One major advantage the ARP scan holds over the regular network scans that rely on the ICMP protocol is that the ARP scan operates at layer 2, meaning that it can perform detection even if the target is firewalled or blocking pings.
 That said, the command `sudo arp-scan -I eth0 -l` is executed, to enumerate the designated network interface, eth0.
 
 <img width="975" height="268" alt="Pasted image 20260706074943" src="https://github.com/user-attachments/assets/1932e3f8-b7df-4b1c-b03a-298e60206da1" />
 
+To reference this technique, we can use [MITRE ATT&CK T1018 - Remote System Discovery](https://attack.mitre.org/techniques/T1018/).
+
 ### Service Enumeration
 Having found the next target, we proceed to enumerate its services with `nmap -sV <ip_address>`. [Nmap](https://nmap.org/book/man.html) is a tool that sends raw IP packets to target hosts and analyzes them to determine what hosts are available on the network, what services the hosts are offering, what operating systems are they running, among other characteristics.
 
 <img width="624" height="176" alt="Pasted image 20260706080010" src="https://github.com/user-attachments/assets/8a92479d-d469-414e-9c6b-02b770b8da29" />
+
+To reference this technique, we can use [MITRE ATT&CK T1046 - Network Service Discovery](https://attack.mitre.org/techniques/T1046/).
 
 ## Initial Access
 ### SSH Credential Brute Force
@@ -44,7 +48,11 @@ Knowing that port 22 is open on this machine, we can start thinking about ideas 
 
 <img width="624" height="69" alt="Pasted image 20260706080351" src="https://github.com/user-attachments/assets/a45bc0d2-3bd1-4847-b38e-ce1c361bdee5" />
 
+To reference this technique, we can use [MITRE ATT&CK T1110.001 - Brute Force: Password Guessing](https://attack.mitre.org/techniques/T1110/001/).
+
 Then, we can simply proceed to connect to the target machine via 'ssh username@<ip_address>' and inserting the corrrect password.
+
+To reference this technique, we can use [MITRE ATT&CK T1078.003 - Valid Accounts: Local Accounts](https://attack.mitre.org/techniques/T1078/003/) and [MITRE ATT&CK T1021.004 - Remote Services: SSH](https://attack.mitre.org/techniques/T1021/004/).
 
 ## Linux Account Manipulation
 Once we're remotely connected to the target, the plan is to generate telemetry by locking an existing user, deleting said user, creating a new user and give that new user admin privileges. Then we'll proceed with creating a cronjob.
@@ -52,11 +60,17 @@ To lock an existing user, the command `sudo usermod -L username` can be used.
 
 To delete a user, we can use the command `sudo userdel -r username`. The `-r` flag deletes said user's home directory and mailbox, if there is one.
 
+To reference these two technique, we can use [MITRE ATT&CK T1531 - Account Access Removal](https://attack.mitre.org/techniques/T1531/).
+
 To create a new user, we can use the command `sudo adduser username`.
+
+To reference this technique, we can use [MITRE ATT&CK T1136.001 - Create Account: Local Account](https://attack.mitre.org/techniques/T1136/001/).
 
 To add a user to sudo grupo, we can use the command `sudo usermod -aG sudo username`. The -a flag serves to append the user to the supplemental groups mentioned by the following '-G' flag, in this case the sudo group.
 
 <img width="549" height="370" alt="Pasted image 20260706081404" src="https://github.com/user-attachments/assets/84db7d3a-c9e9-4c5d-8246-d54261703c67" />
+
+To reference this technique, we can use [MITRE ATT&CK T1097.007 - Account Manipulation: Additional Local or Domain Groups](https://attack.mitre.org/techniques/T1098/007/).
 
 ## Linux Persistence
 ### Scheduled Task Creation
@@ -70,12 +84,16 @@ To verify if the line was added successfully we can check on our current cronjob
 
 To clean the cronjobs, the command `crontab -r` can be used.
 
+To reference this technique, we can use [MITRE ATT&CK T1053.003 - Scheduled Task/Job: Cron](https://attack.mitre.org/techniques/T1053/003/).
+
 Once we're done on this host, we'll proceed to scan the next target subnet, the 10.20.20.0/24 internal network.
 
 ## Internal Network Reconnaissance
 We'll start by targeting the 10.20.20.10 machine, entering now in a Windows environment.
 
 <img width="624" height="426" alt="Pasted image 20260706085108" src="https://github.com/user-attachments/assets/c4888e1a-3baa-4f71-8aad-4fb858cca928" />
+
+To reference this technique, we can use [MITRE ATT&CK T1018 - Remote System Discovery](https://attack.mitre.org/techniques/T1018/).
 
 The goal here, among other secondary objectives, will be to exploit Windows Active Directory by performing the [Golden Ticket](https://www.crowdstrike.com/en-us/cybersecurity-101/cyberattacks/golden-ticket-attack/) technique. This is an attack that exploits weaknesses in the Kerberos authentication protocol, allowing an adversary to maintain persistent access and move laterally within the network, skipping authentication checks. This allows us to effectively pretend to be any user we want, including domain administrators, by forging TGTs (Ticket Granting Tickets) at will, using the KRBTGT password hash. The KRBTGT user is the KDC's (Key Distribution Center) service user responsible for ticket deployment.
 
@@ -90,7 +108,11 @@ Starting with the NTLM hash of the KRBTGT user, we can perform a credential dump
 
 <img width="1060" height="307" alt="Pasted image 20260706092114" src="https://github.com/user-attachments/assets/84ca04e8-cf6a-4fc5-821c-f464f44bd7fa" />
 
+To reference this technique, we can use [MITRE ATT&CK T1003.003 - OS Credential Dumping:NTDS](https://attack.mitre.org/techniques/T1003/003/).
+
 With this, we obtained the NTLM hash of krbtgt. Then, we proceed to connect to the Windows Machine using xfreerdp.
+
+To reference this technique, we can use [MITRE ATT&CK T1021.001 - Remote Services: Remote Desktop Protocol](https://attack.mitre.org/techniques/T1021/001/).
 
 ## Windows Persistence
 Before proceeding with the Golden Ticket Technique, we'll sidetrack a bit to generate some additional telemetry. We'll quickly create a scheduled task and do some registry key changes.
@@ -105,6 +127,8 @@ Once the task is created, it can be deleted with the command `schtasks /delete /
 
 <img width="624" height="81" alt="Pasted image 20260706093449" src="https://github.com/user-attachments/assets/bb471607-089c-4e3f-bbf3-8d7e2f1857be" />
 
+To reference this technique, we can use [MITRE ATT&CK T1053.005 - Scheduled Task/Job: Scheduled Task](https://attack.mitre.org/techniques/T1053/005/).
+
 ### Registry Run Key Modifications
 Moving onto the registry key changes, we'll create a key that'll make the system launch notepad.exe when the user logs in. This can be achieved my executing the following command in powershell `reg add HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v Test /t REG_SZ /d "notepad.exe"` where:
 - `HKCU`= HKEY_CURRENT_USER, only affects the current user;
@@ -116,6 +140,8 @@ Then following the same principle as the scheduled task, the created key can be 
 
 <img width="624" height="45" alt="Pasted image 20260706094228" src="https://github.com/user-attachments/assets/6676fd5e-d004-4675-afa5-e805d16b2168" />
 
+To reference this technique, we can use [MITRE ATT&CK T1547.001 - Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder](https://attack.mitre.org/techniques/T1547/001/).
+
 ## Powershell Activity
 Lastly, we execute the command `Invoke-Expression "Get-Date"` to generate some cmdlet powershell activity.
 
@@ -123,6 +149,8 @@ Lastly, we execute the command `Invoke-Expression "Get-Date"` to generate some c
 
 ## Golden Ticket Attack
 Resuming with the Golden Ticket attack, our next step is to pick a user to impersonate and enumerate the domain's SID. By executing the command `net user /domain`, we can see the users that reside in the domain. For this exercise, we'll pick the user Administrator.
+
+To reference this technique, we can use [MITRE ATT&CK T1087.002 - Account Discovery: Domain Account](https://attack.mitre.org/techniques/T1087/002/).
 
 Next, we need to enumerate the domain SID. This can be done by executing the command `wmic useraccount where name='%username%' get domain,name,sid`. The domain SID will be the obtained SID, but without the last 4 digits, since these are a reference to the user.
 
@@ -132,4 +160,4 @@ Having all the information on our side, we can then proceed to use mimikatz to f
 
 <img width="975" height="301" alt="Pasted image 20260706102256" src="https://github.com/user-attachments/assets/486278e1-dafe-4179-b3d7-bf3ea0fc0880" />
 
-
+To reference this technique, we can use [MITRE ATT&CK T1558.001 - Steal or Forge Kerberos Tickets: Golden Ticket](https://attack.mitre.org/techniques/T1558/001/).
