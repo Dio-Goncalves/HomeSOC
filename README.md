@@ -10,15 +10,13 @@ You can find below the structure of this repository with direct links for each p
 1. [architecture](architecture)
    - [Lab Diagram](<architecture/Lab Diagram.png>)
    - [Network Topology](<architecture/Network Topology.png>)
-2. attacks & detection
-   - Simulation 1
+2. Simulation
+   - [Simulation 1](Simulation/Simulation_1.md)
 3. [setup](setup)
    - [pfSense](setup/pfsense/pfsense.md)
      - [Suricata](setup/pfsense/suricata/suricata.md)
    - [Linux Server + Splunk](setup/linux_server.md)
    - [Windows Machines](setup/windows_machines.md)
-   - Debian Endpoint
-   - Attacker Machine (Kali VM)
 4. [splunk](splunk)
    - [dashboards](splunk/dashboards)
      - [authentication](splunk/dashboards/authentication.md)
