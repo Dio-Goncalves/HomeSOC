@@ -3,7 +3,9 @@ The aim of this exercise is to perform a basic attack route while showcasing the
 
 The attack will consist on your typical network scans, brute-forcing users, lateral movement, privilege escalation, scheduled tasks and kerberoasting. We'll start by going through the attack and then we'll proceed towards the detection side, where we'll look for indicators of each part of the attack and try to reassemble it.
 
-The purpose of this isn't to simulate a realistic black box attack environment, as I'll use known credentials in the form of dictionaries and have intentionally opened ports on the machines to access them. This attack is to merely generate noise for future analysis.
+The purpose of this isn't to simulate a realistic black box attack environment, as I'll use known credentials in the form of dictionaries and have intentionally opened ports on the machines to access them. This attack is to merely generate noise for future analysis on Splunk.
+
+Two external laptops will be added for this attack. One running native Debian OS, which will be the initial attack target and the second one will be running a Kali VM which will be used to attack. These two machines will be operating on a different network together. Check the [Lab Diagram](<architecture/Lab Diagram.png>) for reference.
 
 # Contents
 1. [Attack](#Attack)
